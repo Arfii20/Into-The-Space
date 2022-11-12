@@ -18,3 +18,34 @@
 # background_image.jpg source: https://phys.org/news/2022-08-ai-space-anomalies.html
 
 
+from tkinter import *
+
+
+def configure_root():
+    root.title("Asteroid Game")
+    root.iconbitmap("images/game_icon.ico")
+    root.configure()
+
+    """ Fixing geometry so that the window opens at the center """
+    # Width and height of the window
+    width = 1440
+    height = 900
+
+    # Screen width and height
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Change of coordinates
+    x = int(screen_width / 2 - width / 2)
+    y = int(screen_height / 2 - height / 2)
+
+    # screen position
+    root.geometry(f"{width}x{height}+{x}+{y}")
+
+root = Tk()
+configure_root()
+
+
+
+
+root.mainloop()
