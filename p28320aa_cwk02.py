@@ -15,12 +15,15 @@
 # asteroid_2.png source: https://pngimg.com/image/105528
 # asteroid_3.png source: https://pngimg.com/image/105498
 # asteroid_4.png source: https://pngimg.com/image/105494
-# background_image.jpg source: https://phys.org/news/2022-08-ai-space-anomalies.html
+# background.jpg source: https://www.pexels.com/photo/starry-sky-998641/
+# background.jpg source: Photo by Aleksandar Pasaric: https://www.pexels.com/photo/dark-starry-sky-1694000/
 
 
 from tkinter import *
+from PIL import Image, ImageTk
 
 
+# Configure main window
 def configure_root():
     root.title("Asteroid Game")
     root.iconbitmap("images/game_icon.ico")
@@ -28,8 +31,8 @@ def configure_root():
 
     """ Fixing geometry so that the window opens at the center """
     # Width and height of the window
-    width = 1440
-    height = 900
+    width = window_width
+    height = window_height
 
     # Screen width and height
     screen_width = root.winfo_screenwidth()
@@ -37,15 +40,37 @@ def configure_root():
 
     # Change of coordinates
     x = int(screen_width / 2 - width / 2)
-    y = int(screen_height / 2 - height / 2)
+    y = int(screen_height / 2 - height / 2 - 20)
 
     # screen position
     root.geometry(f"{width}x{height}+{x}+{y}")
 
+
 root = Tk()
+
+# Defining variables
+
+# Width and height of the window
+window_width = 1440
+window_height = 900
+
 configure_root()
 
 
+"""Adding Background to the pain game"""
+# Open background image
+background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
+
+# Creating a Canvas
+canvas_main = Canvas(root, width=window_width, height=window_height)
+canvas_main.pack(fill="both", expand=True)
+
+# Setting background in canvas
+canvas_main.create_image(0, 0, image=background_image, anchor=NW)
+
+
+Label1 = Label(canvas_main, text="Score: 0", font=("Helvetica", 30), bg="black", fg="white")
+Label1.place(x=window_width-230, y=40)
 
 
 root.mainloop()
