@@ -8,7 +8,6 @@
 * The speed of the asteroids will increase making the game harder and harder at each level.
 """
 
-
 # game_icon.ico source: https://www.freeiconspng.com/img/17270
 # spaceship_image.png source: https://www.pngkey.com/detail/u2q8a9t4r5y3a9r5_spaceship-png-file-spaceship-png/
 # asteroid_1.png source: https://www.pngmart.com/image/50759
@@ -56,7 +55,6 @@ window_height = 900
 
 configure_root()
 
-
 """Adding Background to the pain game"""
 # Open background image
 background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
@@ -65,12 +63,52 @@ background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
 canvas_main = Canvas(root, width=window_width, height=window_height)
 canvas_main.pack(fill="both", expand=True)
 
-# Setting background in canvas
+# Add background to canvas
 canvas_main.create_image(0, 0, image=background_image, anchor=NW)
 
+# Resize spaceship
+spaceship_org = Image.open("images/spaceship_image.png")
+spaceship_resized = spaceship_org.resize((80, 80), Image.Resampling.LANCZOS)
+spaceship_image = ImageTk.PhotoImage(spaceship_resized)
 
-Label1 = Label(canvas_main, text="Score: 0", font=("Helvetica", 30), bg="black", fg="white")
-Label1.place(x=window_width-230, y=40)
+# Add spaceship to canvas
+x = 690
+y = 750
+spaceship = canvas_main.create_image(x, y, image=spaceship_image, anchor=NW)
 
+
+# Move spaceship in canvas
+def move_spaceship_left(e):
+    x = -10
+    y = 0
+    canvas_main.move(spaceship, x, y)
+
+
+def move_spaceship_right(e):
+    x = 10
+    y = 0
+    canvas_main.move(spaceship, x, y)
+
+
+def move_spaceship_up(e):
+    x = 0
+    y = -10
+    canvas_main.move(spaceship, x, y)
+
+
+def move_spaceship_down(e):
+    x = 0
+    y = 10
+    canvas_main.move(spaceship, x, y)
+
+
+# Keybindings
+root.bind("<Left>", move_spaceship_left)
+root.bind("<Right>", move_spaceship_right)
+root.bind("<Up>", move_spaceship_up)
+root.bind("<Down>", move_spaceship_down)
+
+# Label1 = Label(canvas_main, text="Score: 0", font=("Helvetica", 30), bg="black", fg="white")
+# Label1.place(x=window_width - 230, y=40)
 
 root.mainloop()
