@@ -19,6 +19,7 @@
 
 
 from tkinter import *
+from tkinter.font import Font
 from PIL import Image, ImageTk
 
 
@@ -27,6 +28,9 @@ def configure_root():
     root.title("Asteroid Game")
     root.iconbitmap("images/game_icon.ico")
     root.configure()
+
+    # Disabled resizing of the window
+    root.resizable(False, False)
 
     """ Fixing geometry so that the window opens at the center """
     # Width and height of the window
@@ -45,39 +49,7 @@ def configure_root():
     root.geometry(f"{width}x{height}+{x}+{y}")
 
 
-root = Tk()
-
-# Defining variables
-
-# Width and height of the window
-window_width = 1440
-window_height = 900
-
-configure_root()
-
-"""Adding Background to the pain game"""
-# Open background image
-background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
-
-# Creating a Canvas
-canvas_main = Canvas(root, width=window_width, height=window_height)
-canvas_main.pack(fill="both", expand=True)
-
-# Add background to canvas
-canvas_main.create_image(0, 0, image=background_image, anchor=NW)
-
-# Resize spaceship
-spaceship_org = Image.open("images/spaceship_image.png")
-spaceship_resized = spaceship_org.resize((80, 80), Image.Resampling.LANCZOS)
-spaceship_image = ImageTk.PhotoImage(spaceship_resized)
-
-# Add spaceship to canvas
-x = 690
-y = 750
-spaceship = canvas_main.create_image(x, y, image=spaceship_image, anchor=NW)
-
-
-# Move spaceship in canvas
+# Creating keybindings to move the spaceship
 def move_spaceship_left(e):
     x = -10
     y = 0
@@ -102,13 +74,57 @@ def move_spaceship_down(e):
     canvas_main.move(spaceship, x, y)
 
 
-# Keybindings
-root.bind("<Left>", move_spaceship_left)
-root.bind("<Right>", move_spaceship_right)
-root.bind("<Up>", move_spaceship_up)
-root.bind("<Down>", move_spaceship_down)
+# Creating main game function
+def main_game():
+    """Adding Background to the pain game"""
+    # Open background image
+    global background_image
+    background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
 
-# Label1 = Label(canvas_main, text="Score: 0", font=("Helvetica", 30), bg="black", fg="white")
-# Label1.place(x=window_width - 230, y=40)
+    # Creating a Canvas
+    global canvas_main
+    canvas_main = Canvas(root, width=window_width, height=window_height)
+    canvas_main.pack(fill="both", expand=True)
+
+    # Add background to canvas
+    canvas_main.create_image(0, 0, image=background_image, anchor=NW)
+
+    # Resize spaceship
+    global spaceship_image
+    spaceship_org = Image.open("images/spaceship_image.png")
+    spaceship_resized = spaceship_org.resize((80, 80), Image.Resampling.LANCZOS)
+    spaceship_image = ImageTk.PhotoImage(spaceship_resized)
+
+    # Add spaceship to canvas
+    global spaceship
+    x = 690
+    y = 750
+    spaceship = canvas_main.create_image(x, y, image=spaceship_image, anchor=NW)
+
+
+    # Keybindings
+    root.bind("<Left>", move_spaceship_left)
+    root.bind("<Right>", move_spaceship_right)
+    root.bind("<Up>", move_spaceship_up)
+    root.bind("<Down>", move_spaceship_down)
+
+    Label1 = Label(canvas_main, text="Score: 0", font=custom_font, bg="black", fg="white")
+    Label1.place(relx=0.79, rely=0.05)
+
+root = Tk()
+
+"""Defining variables"""
+# Width and height of the window
+window_width = 1440
+window_height = 900
+
+# custom font
+custom_font = Font(
+    family="MV Boli",
+    size=35,
+)
+
+configure_root()
+main_game()
 
 root.mainloop()
