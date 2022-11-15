@@ -10,10 +10,11 @@
 
 # game_icon.ico source: https://www.freeiconspng.com/img/17270
 # spaceship_image.png source: https://www.pngkey.com/detail/u2q8a9t4r5y3a9r5_spaceship-png-file-spaceship-png/
-# asteroid_1.png source: https://www.pngmart.com/image/50759
+# asteroid_1.png source: https://www.pngwing.com/en/free-png-yoygi
 # asteroid_2.png source: https://pngimg.com/image/105528
 # asteroid_3.png source: https://pngimg.com/image/105498
 # asteroid_4.png source: https://pngimg.com/image/105494
+# asteroid_5.png source: https://www.pngwing.com/en/free-png-tsprz
 # background.jpg source: https://www.pexels.com/photo/starry-sky-998641/
 # background.jpg source: Photo by Aleksandar Pasaric: https://www.pexels.com/photo/dark-starry-sky-1694000/
 
@@ -21,6 +22,7 @@
 from tkinter import *
 from tkinter.font import Font
 from PIL import Image, ImageTk
+from random import randint
 
 
 # Configure main window
@@ -85,16 +87,8 @@ def pause(e):
         # main_game()
 
 
-# Creating main game function
-def main_game():
-    """Adding Background to the pain game"""
-    # Open background image
-    global background_image
-    background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
-
-    # Add background to canvas
-    canvas_main.create_image(0, 0, image=background_image, anchor=NW)
-
+def add_images():
+    """ Spaceship """
     # Resize spaceship
     global spaceship_image
     spaceship_org = Image.open("images/spaceship_image.png")
@@ -107,11 +101,90 @@ def main_game():
     y = 750
     spaceship = canvas_main.create_image(x, y, image=spaceship_image, anchor=NW)
 
+    """ Asteroid 1 """
+    # Resize asteroid
+    global asteroid_1_image
+    asteroid_org = Image.open("images/asteroid_1.png")
+    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
+    asteroid_1_image = ImageTk.PhotoImage(asteroid_resized)
+
+    # Add asteroid to canvas
+    global asteroid_1
+    asteroid_1_x = randint(0, window_width - 60)
+    asteroid_1_y = 10
+    asteroid_1 = canvas_main.create_image(asteroid_1_x, asteroid_1_y, image=asteroid_1_image, anchor=NW)
+
+    """ Asteroid 2 """
+    # Resize asteroid
+    global asteroid_2_image
+    asteroid_org = Image.open("images/asteroid_2.png")
+    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
+    asteroid_2_image = ImageTk.PhotoImage(asteroid_resized)
+
+    # Add asteroid to canvas
+    global asteroid_2
+    asteroid_2_x = randint(0, window_width - 60)
+    asteroid_2_y = 10
+    asteroid_2 = canvas_main.create_image(asteroid_2_x, asteroid_2_y, image=asteroid_2_image, anchor=NW)
+
+    """ Asteroid 3 """
+    # Resize asteroid
+    global asteroid_3_image
+    asteroid_org = Image.open("images/asteroid_3.png")
+    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
+    asteroid_3_image = ImageTk.PhotoImage(asteroid_resized)
+
+    # Add asteroid to canvas
+    global asteroid_3
+    asteroid_3_x = randint(0, window_width - 60)
+    asteroid_3_y = 10
+    asteroid_3 = canvas_main.create_image(asteroid_3_x, asteroid_3_y, image=asteroid_3_image, anchor=NW)
+
+    """ Asteroid 4 """
+    # Resize asteroid
+    global asteroid_4_image
+    asteroid_org = Image.open("images/asteroid_4.png")
+    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
+    asteroid_4_image = ImageTk.PhotoImage(asteroid_resized)
+
+    # Add asteroid to canvas
+    global asteroid_4
+    asteroid_4_x = randint(0, window_width - 60)
+    asteroid_4_y = 10
+    asteroid_4 = canvas_main.create_image(asteroid_4_x, asteroid_4_y, image=asteroid_4_image, anchor=NW)
+
+    """ Asteroid 5 """
+    # Resize asteroid
+    global asteroid_5_image
+    asteroid_org = Image.open("images/asteroid_5.png")
+    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
+    asteroid_5_image = ImageTk.PhotoImage(asteroid_resized)
+
+    # Add asteroid to canvas
+    global asteroid_5
+    asteroid_5_x = randint(0, window_width - 60)
+    asteroid_5_y = 10
+    asteroid_5 = canvas_main.create_image(asteroid_5_x, asteroid_5_y, image=asteroid_5_image, anchor=NW)
+
+
+# Creating main game function
+def main_game():
+    """Adding Background to the pain game"""
+    # Open background image
+    global background_image
+    background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
+
+    # Add background to canvas
+    canvas_main.create_image(0, 0, image=background_image, anchor=NW)
+
+    add_images()
+
     """ Making the scoring system """
     # storing and displaying the score
     score = 0
     score_text = "Score: " + str(score)
-    scoreText = canvas_main.create_text(window_width - window_width/8, window_height/15, fill="white", font=custom_font, text=score_text)
+    scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15, fill="white",
+                                        font=custom_font, text=score_text)
 
 
 window = Tk()
@@ -135,7 +208,6 @@ pause_game = False
 """ Creating the Canvas """
 canvas_main = Canvas(window, width=window_width, height=window_height)
 canvas_main.pack(fill="both", expand=True)
-
 
 # Keybindings
 canvas_main.bind("<Left>", move_spaceship_left)
