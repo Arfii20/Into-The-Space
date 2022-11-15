@@ -101,70 +101,43 @@ def add_images():
     y = 750
     spaceship = canvas_main.create_image(x, y, image=spaceship_image, anchor=NW)
 
-    """ Asteroid 1 """
+    # List data structure to store asteroid images
+    global asteroid_image, asteroid
+    asteroid_image = []
+
     # Resize asteroid
-    global asteroid_1_image
-    asteroid_org = Image.open("images/asteroid_1.png")
-    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
-    asteroid_1_image = ImageTk.PhotoImage(asteroid_resized)
+    for i in range(1, 6):
+        asteroid_org = Image.open("images/asteroid_" + str(i) + ".png")
+        asteroid_resized = asteroid_org.resize((100, 100), Image.Resampling.LANCZOS)
+        asteroid_image.append(ImageTk.PhotoImage(asteroid_resized))
 
-    # Add asteroid to canvas
-    global asteroid_1
-    asteroid_1_x = randint(0, window_width - 60)
-    asteroid_1_y = 10
-    asteroid_1 = canvas_main.create_image(asteroid_1_x, asteroid_1_y, image=asteroid_1_image, anchor=NW)
+    print(asteroid_image)
+    asteroid_initial_position()
 
-    """ Asteroid 2 """
-    # Resize asteroid
-    global asteroid_2_image
-    asteroid_org = Image.open("images/asteroid_2.png")
-    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
-    asteroid_2_image = ImageTk.PhotoImage(asteroid_resized)
 
-    # Add asteroid to canvas
-    global asteroid_2
-    asteroid_2_x = randint(0, window_width - 60)
-    asteroid_2_y = 10
-    asteroid_2 = canvas_main.create_image(asteroid_2_x, asteroid_2_y, image=asteroid_2_image, anchor=NW)
+def asteroid_initial_position():
+    global asteroid
+    asteroid = []
 
-    """ Asteroid 3 """
-    # Resize asteroid
-    global asteroid_3_image
-    asteroid_org = Image.open("images/asteroid_3.png")
-    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
-    asteroid_3_image = ImageTk.PhotoImage(asteroid_resized)
+    # Selecting initial position of the asteroid
+    asteroid_select = randint(0, 4)
+    asteroid_x = randint(50, window_width - 110)
+    asteroid_y = 0
+    asteroid.append(canvas_main.create_image(asteroid_x, asteroid_y, image=asteroid_image[asteroid_select], anchor=NW))
 
-    # Add asteroid to canvas
-    global asteroid_3
-    asteroid_3_x = randint(0, window_width - 60)
-    asteroid_3_y = 10
-    asteroid_3 = canvas_main.create_image(asteroid_3_x, asteroid_3_y, image=asteroid_3_image, anchor=NW)
+    asteroid_falling_down()
 
-    """ Asteroid 4 """
-    # Resize asteroid
-    global asteroid_4_image
-    asteroid_org = Image.open("images/asteroid_4.png")
-    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
-    asteroid_4_image = ImageTk.PhotoImage(asteroid_resized)
+def asteroid_falling_down():
+    global asteroid
+    pos_asteroid = canvas_main.coords(asteroid[0])
+    if pos_asteroid[1] != window_height:
+        canvas_main.coords(asteroid[0], pos_asteroid[0], pos_asteroid[1] + 10)
+        window.after(10, asteroid_falling_down)
+    else:
+        print(asteroid)
 
-    # Add asteroid to canvas
-    global asteroid_4
-    asteroid_4_x = randint(0, window_width - 60)
-    asteroid_4_y = 10
-    asteroid_4 = canvas_main.create_image(asteroid_4_x, asteroid_4_y, image=asteroid_4_image, anchor=NW)
+        asteroid_initial_position()
 
-    """ Asteroid 5 """
-    # Resize asteroid
-    global asteroid_5_image
-    asteroid_org = Image.open("images/asteroid_5.png")
-    asteroid_resized = asteroid_org.resize((60, 60), Image.Resampling.LANCZOS)
-    asteroid_5_image = ImageTk.PhotoImage(asteroid_resized)
-
-    # Add asteroid to canvas
-    global asteroid_5
-    asteroid_5_x = randint(0, window_width - 60)
-    asteroid_5_y = 10
-    asteroid_5 = canvas_main.create_image(asteroid_5_x, asteroid_5_y, image=asteroid_5_image, anchor=NW)
 
 
 # Creating main game function
@@ -183,8 +156,7 @@ def main_game():
     # storing and displaying the score
     score = 0
     score_text = "Score: " + str(score)
-    scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15, fill="white",
-                                        font=custom_font, text=score_text)
+    scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15, fill="white", font=custom_font, text=score_text)
 
 
 window = Tk()
