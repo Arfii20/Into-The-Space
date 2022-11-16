@@ -21,12 +21,15 @@
 # start.png source: http://pixelartmaker.com/art/6a45404d913e6d1
 # exit.png source: http://pixelartmaker.com/art/36cd392e6295705
 # pause.png source: https://www.pixilart.com/draw/pause-button-2-22f5240ce52a5c4
+# restart.png source: http://pixelartmaker.com/art/ad99f7494306997
 
 
 from tkinter import *
 from tkinter.font import Font
 from PIL import Image, ImageTk
 from random import randint
+
+
 # from s
 # from threading import Thread
 # from time import sleep
@@ -37,8 +40,6 @@ def configure_window():
     # global menubar
     window.title("Asteroid Game")
     window.iconbitmap("images/game_icon.ico")
-
-
 
     # Disabled resizing of the window
     window.resizable(False, False)
@@ -58,7 +59,6 @@ def configure_window():
 
     # screen position
     window.geometry(f"{width}x{height}+{x}+{y}")
-
 
 
 # A manubar on top of the window
@@ -91,15 +91,12 @@ def main_menu(e):
     menu()
 
     # Add start to canvas
-    start_button = Button(window, image=start_image, bg="black", border=0, command=main_game)
     start = canvas_main.create_window(window_width / 2, window_height / 2 - 150, window=start_button)
 
     # Add options to canvas
-    options_button = Button(window, image=options_image, bg="black", border=0, command=options_button_click)
     options = canvas_main.create_window(window_width / 2, window_height / 2, window=options_button)
 
     # Add exit to canvas
-    exit_button = Button(window, image=exit_image, bg="black", border=0, command=window.destroy)
     exit = canvas_main.create_window(window_width / 2, window_height / 2 + 150, window=exit_button)
 
 
@@ -120,26 +117,30 @@ def move_spaceship_down(e):
     canvas_main.move(spaceship, 0, 10)
 
 
-def pause(e):
-    global resume_image, pause_game, resumed
-
-    # Add start to canvas
-    resume_button = Button(window, image=resume_image, border=0, fg="black", bg="black", command=pause_button_click)
+def pause_menu(e):
+    global pause_game, resumed, exited, restarted
 
     if not pause_game:
         pause_game = True
-        resumed = canvas_main.create_window(window_width / 2, window_height / 2)
-        canvas_main.itemconfig(resumed, window=resume_button)
+        resumed = canvas_main.create_window(window_width / 2, window_height / 2 - 150, window=resume_button)
+
+        exited = canvas_main.create_window(window_width / 2, window_height / 2 + 150, window=exit_button)
+
+        restarted = canvas_main.create_window(window_width / 2, window_height / 2, window=restart_button)
 
     elif pause_game:
+        canvas_main.delete(exited)
         canvas_main.delete(resumed)
+        canvas_main.delete(restarted)
         pause_game = False
         asteroid_falling_down()
 
 
 def pause_button_click():
     global pause_game
+    canvas_main.delete(exited)
     canvas_main.delete(resumed)
+    canvas_main.delete(restarted)
     pause_game = False
     asteroid_falling_down()
 
@@ -149,15 +150,8 @@ def options_button_click():
 
 
 def add_images():
-    """ Spaceship """
-    # Resize spaceship
-    global spaceship_image
-    spaceship_org = Image.open("images/spaceship_image.png")
-    spaceship_resized = spaceship_org.resize((80, 80), Image.Resampling.LANCZOS)
-    spaceship_image = ImageTk.PhotoImage(spaceship_resized)
-
-    # Add spaceship to canvas
     global spaceship
+    # Add spaceship to canvas
     spaceship = canvas_main.create_image(window_width / 2 - 40,
                                          window_height - window_height / 7,
                                          image=spaceship_image, anchor=NW)
@@ -192,13 +186,12 @@ def asteroid_initial_position():
 
 # Function for making the asteroid fall
 def asteroid_falling_down():
-    global asteroid, score, resumed, after
+    global asteroid, score, after
     pos_asteroid = canvas_main.coords(asteroid[0])
     if pos_asteroid[1] != window_height and pause_game is False:
         canvas_main.coords(asteroid[0], pos_asteroid[0], pos_asteroid[1] + 10)
         after = window.after(10, asteroid_falling_down)
     elif not pause_game:
-
         # Increasing score
         score += 20
         score_txt = "Score: " + str(score)
@@ -208,15 +201,21 @@ def asteroid_falling_down():
 
 
 def restart_game():
-    global restart_flag
+    global restart_flag, pause_game
+    pause_game = False
     restart_flag = True
+    canvas_main.delete(exited)
+    canvas_main.delete(resumed)
+    canvas_main.delete(restarted)
     window.after_cancel(after)
     main_game()
 
 
 # Creating main game function
 def main_game():
-    global score, scoreText, restart_flag, start, options, exit
+    global score, scoreText, restart_flag
+
+    canvas_main.unbind("<Return>")
 
     # Deletes the start button
     canvas_main.delete(start)
@@ -236,7 +235,7 @@ def main_game():
     canvas_main.bind("<Right>", move_spaceship_right)
     canvas_main.bind("<Up>", move_spaceship_up)
     canvas_main.bind("<Down>", move_spaceship_down)
-    canvas_main.bind("<Escape>", pause)
+    canvas_main.bind("<Escape>", pause_menu)
     canvas_main.focus_set()
 
     """ Making the scoring system """
@@ -283,28 +282,43 @@ canvas_main.create_image(0, 0, image=background_image, anchor=NW)
 
 """ Start menu """
 press_any_key = canvas_main.create_text(window_width / 2, window_height / 2,
-                                    fill="white", font=custom_font,
-                                    text="Press enter to continue")
+                                        fill="white", font=custom_font,
+                                        text="Press enter to continue")
 
 """ Start button """
 start_org = Image.open("images/start.png")
 start_resized = start_org.resize((260, 112), Image.Resampling.LANCZOS)
 start_image = ImageTk.PhotoImage(start_resized)
+start_button = Button(window, image=start_image, bg="black", border=0, command=main_game)
 
 """ options button """
 options_org = Image.open("images/options.png")
 options_resized = options_org.resize((364, 112), Image.Resampling.LANCZOS)
 options_image = ImageTk.PhotoImage(options_resized)
+options_button = Button(window, image=options_image, bg="black", border=0, command=options_button_click)
 
 """ exit button """
 exit_org = Image.open("images/exit.png")
 exit_resized = exit_org.resize((284, 100), Image.Resampling.LANCZOS)
 exit_image = ImageTk.PhotoImage(exit_resized)
+exit_button = Button(window, image=exit_image, bg="black", border=0, command=window.destroy)
 
 """ resume button """
 resume_org = Image.open("images/resume.png")
 resume_resized = resume_org.resize((284, 112), Image.Resampling.LANCZOS)
 resume_image = ImageTk.PhotoImage(resume_resized)
+resume_button = Button(window, image=resume_image, border=0, bg="black", command=pause_button_click)
+
+""" restart button """
+restart_org = Image.open("images/restart.png")
+restart_resized = restart_org.resize((284, 112), Image.Resampling.LANCZOS)
+restart_image = ImageTk.PhotoImage(restart_resized)
+restart_button = Button(window, image=restart_image, border=0, bg="black", command=restart_game)
+
+""" Spaceship """
+spaceship_org = Image.open("images/spaceship_image.png")
+spaceship_resized = spaceship_org.resize((80, 80), Image.Resampling.LANCZOS)
+spaceship_image = ImageTk.PhotoImage(spaceship_resized)
 
 canvas_main.bind("<Return>", main_menu)
 canvas_main.focus_set()
