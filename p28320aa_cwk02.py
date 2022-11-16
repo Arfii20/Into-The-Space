@@ -16,12 +16,15 @@
 # asteroid_4.png source: https://pngimg.com/image/105494
 # asteroid_5.png source: https://www.pngwing.com/en/free-png-tsprz
 # background.jpg source: Photo by Aleksandar Pasaric: https://www.pexels.com/photo/dark-starry-sky-1694000/
+# main.png: https://www.pngitem.com/middle/wmmbxo_asteroids-asteroid-mining-transparent-background-asteroids-png-png/
 
 # options.png source: http://pixelartmaker.com/art/e996fd04f0c49f2
 # start.png source: http://pixelartmaker.com/art/6a45404d913e6d1
 # exit.png source: http://pixelartmaker.com/art/36cd392e6295705
 # pause.png source: https://www.pixilart.com/draw/pause-button-2-22f5240ce52a5c4
 # restart.png source: http://pixelartmaker.com/art/ad99f7494306997
+# resume.png source: http://pixelartmaker.com/art/5be181b34875416
+# leaderboard.png source: http://pixelartmaker.com/art/7cc98bfa5bbcc0b
 
 
 from tkinter import *
@@ -61,6 +64,16 @@ def configure_window():
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 
+def normal_buttons():
+    canvas_main.itemconfig(options, state="normal")
+    canvas_main.itemconfig(exited, state="normal")
+    canvas_main.itemconfig(leaderboards, state="normal")
+
+def hidden_buttons():
+    canvas_main.itemconfig(exited, state="hidden")
+    canvas_main.itemconfig(leaderboards, state="hidden")
+    canvas_main.itemconfig(options, state="hidden")
+
 # A manubar on top of the window
 def menu():
     file_menu = Menu(menubar, tearoff=False)
@@ -77,8 +90,8 @@ def menu():
     # history_menu.add_command(label="Help", command=help)
 
 
-def main_menu(e):
-    global menubar, start, options, exit
+def main_menu(_):
+    global menubar
 
     # Deleting the text
     canvas_main.delete(press_any_key)
@@ -90,62 +103,62 @@ def main_menu(e):
     # Add a manu bar
     menu()
 
-    # Add start to canvas
-    start = canvas_main.create_window(window_width / 2, window_height / 2 - 150, window=start_button)
-
-    # Add options to canvas
-    options = canvas_main.create_window(window_width / 2, window_height / 2, window=options_button)
-
-    # Add exit to canvas
-    exit = canvas_main.create_window(window_width / 2, window_height / 2 + 150, window=exit_button)
+    # Add buttons to main menu of canvas
+    canvas_main.itemconfig(start, state="normal")
+    normal_buttons()
 
 
 # Creating keybindings to move the spaceship
-def move_spaceship_left(e):
+def move_spaceship_left(_):
     canvas_main.move(spaceship, -10, 0)
 
 
-def move_spaceship_right(e):
+def move_spaceship_right(_):
     canvas_main.move(spaceship, 10, 0)
 
 
-def move_spaceship_up(e):
+def move_spaceship_up(_):
     canvas_main.move(spaceship, 0, -10)
 
 
-def move_spaceship_down(e):
+def move_spaceship_down(_):
     canvas_main.move(spaceship, 0, 10)
 
 
-def pause_menu(e):
-    global pause_game, resumed, exited, restarted
+def pause_menu(_):
+    global pause_game
 
     if not pause_game:
         pause_game = True
-        resumed = canvas_main.create_window(window_width / 2, window_height / 2 - 150, window=resume_button)
 
-        exited = canvas_main.create_window(window_width / 2, window_height / 2 + 150, window=exit_button)
-
-        restarted = canvas_main.create_window(window_width / 2, window_height / 2, window=restart_button)
+        # Adding buttons for pause menu
+        canvas_main.itemconfig(resume, state="normal")
+        canvas_main.itemconfig(restarted, state="normal")
+        normal_buttons()
+        canvas_main.itemconfig(main_image, state="normal")
 
     elif pause_game:
-        canvas_main.delete(exited)
-        canvas_main.delete(resumed)
-        canvas_main.delete(restarted)
+        canvas_main.itemconfig(resume, state="hidden")
+        canvas_main.itemconfig(restarted, state="hidden")
+        hidden_buttons()
         pause_game = False
         asteroid_falling_down()
 
 
-def pause_button_click():
+def resume_button_click():
     global pause_game
-    canvas_main.delete(exited)
-    canvas_main.delete(resumed)
-    canvas_main.delete(restarted)
+    canvas_main.itemconfig(resume, state="hidden")
+    canvas_main.itemconfig(restarted, state="hidden")
+    hidden_buttons()
     pause_game = False
     asteroid_falling_down()
 
 
 def options_button_click():
+    pass
+
+
+def leaderboard():
     pass
 
 
@@ -204,9 +217,9 @@ def restart_game():
     global restart_flag, pause_game
     pause_game = False
     restart_flag = True
-    canvas_main.delete(exited)
-    canvas_main.delete(resumed)
-    canvas_main.delete(restarted)
+    canvas_main.itemconfig(resume, state="hidden")
+    canvas_main.itemconfig(restarted, state="hidden")
+    hidden_buttons()
     window.after_cancel(after)
     main_game()
 
@@ -217,10 +230,10 @@ def main_game():
 
     canvas_main.unbind("<Return>")
 
-    # Deletes the start button
-    canvas_main.delete(start)
-    canvas_main.delete(options)
-    canvas_main.delete(exit)
+    # Hides the main menu buttons
+    canvas_main.itemconfig(main_image, state="hidden")
+    canvas_main.itemconfig(start, state="hidden")
+    hidden_buttons()
 
     # Deletes the scoreText when restarting
     if restart_flag:
@@ -281,43 +294,66 @@ background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
 canvas_main.create_image(0, 0, image=background_image, anchor=NW)
 
 """ Start menu """
+# main menu image
+main_menu_image = ImageTk.PhotoImage(Image.open("images/main.png"))
+main_image = canvas_main.create_image(window_width/2, window_height/2, image=main_menu_image, anchor="center")
+canvas_main.itemconfig(main_image, state="normal")
+
 press_any_key = canvas_main.create_text(window_width / 2, window_height / 2,
                                         fill="white", font=custom_font,
                                         text="Press enter to continue")
 
 """ Start button """
 start_org = Image.open("images/start.png")
-start_resized = start_org.resize((260, 112), Image.Resampling.LANCZOS)
+start_resized = start_org.resize((230, 90), Image.Resampling.LANCZOS)
 start_image = ImageTk.PhotoImage(start_resized)
 start_button = Button(window, image=start_image, bg="black", border=0, command=main_game)
+start = canvas_main.create_window(window_width / 2, window_height / 2 - 165, window=start_button)
+canvas_main.itemconfig(start, state="hidden")
 
 """ options button """
 options_org = Image.open("images/options.png")
-options_resized = options_org.resize((364, 112), Image.Resampling.LANCZOS)
+options_resized = options_org.resize((280, 90), Image.Resampling.LANCZOS)
 options_image = ImageTk.PhotoImage(options_resized)
 options_button = Button(window, image=options_image, bg="black", border=0, command=options_button_click)
+options = canvas_main.create_window(window_width / 2, window_height / 2 + 55, window=options_button)
+canvas_main.itemconfig(options, state="hidden")
 
 """ exit button """
 exit_org = Image.open("images/exit.png")
-exit_resized = exit_org.resize((284, 100), Image.Resampling.LANCZOS)
+exit_resized = exit_org.resize((240, 80), Image.Resampling.LANCZOS)
 exit_image = ImageTk.PhotoImage(exit_resized)
 exit_button = Button(window, image=exit_image, bg="black", border=0, command=window.destroy)
+exited = canvas_main.create_window(window_width / 2, window_height / 2 + 165, window=exit_button)
+canvas_main.itemconfig(exited, state="hidden")
 
 """ resume button """
 resume_org = Image.open("images/resume.png")
-resume_resized = resume_org.resize((284, 112), Image.Resampling.LANCZOS)
+resume_resized = resume_org.resize((264, 90), Image.Resampling.LANCZOS)
 resume_image = ImageTk.PhotoImage(resume_resized)
-resume_button = Button(window, image=resume_image, border=0, bg="black", command=pause_button_click)
+resume_button = Button(window, image=resume_image, border=0, bg="black", command=resume_button_click)
+resume = canvas_main.create_window(window_width / 2, window_height / 2 - 275, window=resume_button)
+canvas_main.itemconfig(resume, state="hidden")
 
 """ restart button """
 restart_org = Image.open("images/restart.png")
-restart_resized = restart_org.resize((284, 112), Image.Resampling.LANCZOS)
+restart_resized = restart_org.resize((284, 100), Image.Resampling.LANCZOS)
 restart_image = ImageTk.PhotoImage(restart_resized)
 restart_button = Button(window, image=restart_image, border=0, bg="black", command=restart_game)
+restarted = canvas_main.create_window(window_width / 2, window_height / 2 - 165, window=restart_button)
+canvas_main.itemconfig(restarted, state="hidden")
+
+""" leaderboard button """
+leaderboard_org = Image.open("images/leaderboard.png")
+leaderboard_resized = leaderboard_org.resize((574, 90), Image.Resampling.LANCZOS)
+leaderboard_image = ImageTk.PhotoImage(leaderboard_resized)
+leaderboard_button = Button(window, image=leaderboard_image, border=0, bg="black", command=leaderboard)
+leaderboards = canvas_main.create_window(window_width / 2, window_height / 2 - 55, window=leaderboard_button)
+canvas_main.itemconfig(leaderboards, state="hidden")
 
 """ Spaceship """
 spaceship_org = Image.open("images/spaceship_image.png")
-spaceship_resized = spaceship_org.resize((80, 80), Image.Resampling.LANCZOS)
+spaceship_resized = spaceship_org.resize((100, 100), Image.Resampling.LANCZOS)
 spaceship_image = ImageTk.PhotoImage(spaceship_resized)
 
 canvas_main.bind("<Return>", main_menu)
