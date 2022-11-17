@@ -7,7 +7,7 @@
 * The difficulty increases at certain scores.
 * The speed of the asteroids will increase making the game harder and harder at each level.
 """
-
+import os
 # game_icon.ico source: https://www.freeiconspng.com/img/17270
 # spaceship_image.png source: https://www.pngkey.com/detail/u2q8a9t4r5y3a9r5_spaceship-png-file-spaceship-png/
 # asteroid_1.png source: https://www.pngwing.com/en/free-png-yoygi
@@ -27,10 +27,11 @@
 # leaderboard.png source: http://pixelartmaker.com/art/7cc98bfa5bbcc0b
 
 
-from tkinter import *
+from tkinter import Tk, Canvas, Button, Label
 from tkinter.font import Font
 from PIL import Image, ImageTk
 from random import randint
+from os import getlogin
 
 
 # from s
@@ -40,7 +41,6 @@ from random import randint
 
 # Configure main window
 def configure_window():
-    # global menubar
     window.title("Asteroid Game")
     window.iconbitmap("images/game_icon.ico")
 
@@ -64,44 +64,25 @@ def configure_window():
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 
+# sets the state of the selected buttons to hidden
 def normal_buttons():
     canvas_main.itemconfig(options, state="normal")
     canvas_main.itemconfig(exited, state="normal")
     canvas_main.itemconfig(leaderboards, state="normal")
 
+
+# sets the state of the selected buttons to hidden
 def hidden_buttons():
     canvas_main.itemconfig(exited, state="hidden")
     canvas_main.itemconfig(leaderboards, state="hidden")
     canvas_main.itemconfig(options, state="hidden")
 
-# A manubar on top of the window
-def menu():
-    file_menu = Menu(menubar, tearoff=False)
-    menubar.add_cascade(label="File", menu=file_menu, underline=0)
-    file_menu.add_command(label="Restart", command=restart_game)
-    file_menu.add_command(label="Exit", command=window.destroy)
 
-    history_menu = Menu(menubar, tearoff=False)
-    menubar.add_cascade(label="Match History", menu=history_menu, underline=0)
-    # history_menu.add_command(label="Match history", command=win_history)
-
-    help_menu = Menu(menubar, tearoff=False)
-    menubar.add_cascade(label="Help", menu=help_menu, underline=0)
-    # history_menu.add_command(label="Help", command=help)
-
-
+# Creates the main menu page and buttons
 def main_menu(_):
-    global menubar
-
     # Deleting the text
     canvas_main.delete(press_any_key)
-
-    # Adding a Menu bar
-    menubar = Menu(canvas_main)
-    window.configure(menu=menubar)
-
-    # Add a manu bar
-    menu()
+    canvas_main.delete(welcome_text)
 
     # Add buttons to main menu of canvas
     canvas_main.itemconfig(start, state="normal")
@@ -110,45 +91,51 @@ def main_menu(_):
 
 # Creating keybindings to move the spaceship
 def move_spaceship_left(_):
-    canvas_main.move(spaceship, -10, 0)
+    canvas_main.move(spaceship, -15, 0)
 
 
 def move_spaceship_right(_):
-    canvas_main.move(spaceship, 10, 0)
+    canvas_main.move(spaceship, 15, 0)
 
 
 def move_spaceship_up(_):
-    canvas_main.move(spaceship, 0, -10)
+    canvas_main.move(spaceship, 0, -15)
 
 
 def move_spaceship_down(_):
-    canvas_main.move(spaceship, 0, 10)
+    canvas_main.move(spaceship, 0, 15)
 
 
+# Creating the pause menu
 def pause_menu(_):
     global pause_game
 
+    # pauses the game and adds buttons
     if not pause_game:
         pause_game = True
-
-        # Adding buttons for pause menu
         canvas_main.itemconfig(resume, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
         normal_buttons()
         canvas_main.itemconfig(main_image, state="normal")
 
+    # unpauses the game and hides buttons
     elif pause_game:
+        pause_game = False
         canvas_main.itemconfig(resume, state="hidden")
         canvas_main.itemconfig(restarted, state="hidden")
+        canvas_main.itemconfig(main_image, state="hidden")
         hidden_buttons()
-        pause_game = False
+
+        # calls the falling function as long as not paused
         asteroid_falling_down()
 
 
+# Resumes the game through button click
 def resume_button_click():
     global pause_game
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
+    canvas_main.itemconfig(main_image, state="hidden")
     hidden_buttons()
     pause_game = False
     asteroid_falling_down()
@@ -165,9 +152,7 @@ def leaderboard():
 def add_images():
     global spaceship
     # Add spaceship to canvas
-    spaceship = canvas_main.create_image(window_width / 2 - 40,
-                                         window_height - window_height / 7,
-                                         image=spaceship_image, anchor=NW)
+    canvas_main.itemconfig(spaceship, state="normal")
 
     # List data structure to store asteroid images
     global asteroid_image
@@ -176,7 +161,7 @@ def add_images():
     # Resize asteroid
     for i in range(1, 6):
         asteroid_org = Image.open("images/asteroid_" + str(i) + ".png")
-        asteroid_resized = asteroid_org.resize((100, 100), Image.Resampling.LANCZOS)
+        asteroid_resized = asteroid_org.resize((120, 120), Image.Resampling.LANCZOS)
         asteroid_image.append(ImageTk.PhotoImage(asteroid_resized))
 
 
@@ -191,7 +176,9 @@ def asteroid_initial_position():
     asteroid_y = 0
 
     # Adding the position to an empty set for threading
-    asteroid.append(canvas_main.create_image(asteroid_x, asteroid_y, image=asteroid_image[asteroid_select], anchor=NW))
+    asteroid.append(canvas_main.create_image(asteroid_x, asteroid_y,
+                                             image=asteroid_image[asteroid_select],
+                                             anchor="nw"))
 
     # after selecting position, fall is initialised
     asteroid_falling_down()
@@ -258,7 +245,7 @@ def main_game():
 
     # displaying the score on the top right
     scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15,
-                                        fill="white", font=custom_font, text=score_text)
+                                        fill="white", font=custom_font2, text=score_text)
 
     # Initialising the falling of asteroids
     asteroid_initial_position()
@@ -272,9 +259,13 @@ window_width = 1440
 window_height = 900
 
 """ custom font"""
-custom_font = Font(
-    family="MV Boli",
-    size=35)
+custom_font1 = Font(
+    family="OCR A Extended",
+    size=50)
+
+custom_font2 = Font(
+    family="OCR A Extended",
+    size=30)
 
 configure_window()
 
@@ -291,17 +282,23 @@ canvas_main.pack(fill="both", expand=True)
 background_image = ImageTk.PhotoImage(Image.open("images/background.jpg"))
 
 # Add background to canvas
-canvas_main.create_image(0, 0, image=background_image, anchor=NW)
+canvas_main.create_image(0, 0, image=background_image, anchor="nw")
 
 """ Start menu """
 # main menu image
 main_menu_image = ImageTk.PhotoImage(Image.open("images/main.png"))
-main_image = canvas_main.create_image(window_width/2, window_height/2, image=main_menu_image, anchor="center")
+main_image = canvas_main.create_image(window_width / 2, window_height / 2,
+                                      image=main_menu_image, anchor="center")
 canvas_main.itemconfig(main_image, state="normal")
 
-press_any_key = canvas_main.create_text(window_width / 2, window_height / 2,
-                                        fill="white", font=custom_font,
-                                        text="Press enter to continue")
+welcome_text = canvas_main.create_text(window_width / 2, window_height / 2 - 30,
+                                       fill="white", font=custom_font1,
+                                       text="Hello " + str(os.getlogin()))
+
+# Press any key to continue to start menu
+press_any_key = canvas_main.create_text(window_width / 2, window_height / 2 + 30,
+                                        fill="white", font=custom_font2,
+                                        text="Please press enter to continue")
 
 """ Start button """
 start_org = Image.open("images/start.png")
@@ -355,6 +352,10 @@ canvas_main.itemconfig(leaderboards, state="hidden")
 spaceship_org = Image.open("images/spaceship_image.png")
 spaceship_resized = spaceship_org.resize((100, 100), Image.Resampling.LANCZOS)
 spaceship_image = ImageTk.PhotoImage(spaceship_resized)
+spaceship = canvas_main.create_image(window_width / 2 - 40,
+                                     window_height - window_height / 7,
+                                     image=spaceship_image, anchor="nw")
+canvas_main.itemconfig(spaceship, state="hidden")
 
 canvas_main.bind("<Return>", main_menu)
 canvas_main.focus_set()
