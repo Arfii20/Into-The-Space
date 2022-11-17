@@ -27,7 +27,7 @@ import os
 # leaderboard.png source: http://pixelartmaker.com/art/7cc98bfa5bbcc0b
 
 
-from tkinter import Tk, Canvas, Button, Label
+from tkinter import Tk, Canvas, Button, Label, Frame
 from tkinter.font import Font
 from PIL import Image, ImageTk
 from random import randint
@@ -146,8 +146,58 @@ def options_button_click():
 
 
 def leaderboard():
+    global leaderboard_frame
+    leaderboard_frame = Frame(canvas_main, width=window_width, height=window_height, bg="black")
+    leaderboard_frame.pack(fill="both", expand=1)
+
+    # Hides the main menu buttons
+    canvas_main.itemconfig(main_image, state="hidden")
+    canvas_main.itemconfig(start, state="hidden")
+    canvas_main.itemconfig(resume, state="hidden")
+    canvas_main.itemconfig(restarted, state="hidden")
+    hidden_buttons()
+
+    Label(leaderboard_frame, text="Leaderboard:\n", font=("OCR A Extended", 40),
+          bg="black", fg="white").pack(anchor="w", padx=30, pady=(30, 0))
+
+    file = open("leaderboard.txt", "r")
+    lines = file.readlines()
+    if len(lines) == 0:
+        Label(leaderboard_frame, text="Nothing to show here\n", font=("OCR A Extended", 40),
+              bg="black", fg="white").pack(anchor="w", padx=30)
+    else:
+        for idx, val in enumerate(lines, start=1):
+            Label(leaderboard_frame, text=(str(idx) + ". " + str(val)), bg="black", fg="white",
+                  font=("OCR A Extended", 20)).pack(anchor="w", padx=30)
+        Button(leaderboard_frame, text="Click to clear history", command=clear_history).pack()
+    file.close()
+
+    Button(leaderboard_frame, text="Click to close", command=leaderboard_clear).pack()
+
+
+def leaderboard_clear():
+    global leaderboard_frame
+    leaderboard_frame.destroy()
+    canvas_main.itemconfig(resume, state="normal")
+    canvas_main.itemconfig(start, state="normal")
+    normal_buttons()
+    canvas_main.itemconfig(main_image, state="normal")
+
+
+def clear_history():
     pass
 
+
+#     file = open("History.txt", "w")
+#     file.write("")
+#     file.close()
+#
+#     for i in lead
+#     label1 = Label(leaderboard_frame1, text="Match History:\n", font=40).pack(anchor="w", padx=20)
+#     label2 = Label(leaderboard_frame1, text="Nothing to show here\n", ).pack(anchor="w", padx=20)
+#     leaderboard_frame.destroy()
+#
+#     close = Button(leaderboard_frame1, text="Click to close", command=leaderboard_frame1.destroy).pack()
 
 def add_images():
     global spaceship
@@ -245,7 +295,7 @@ def main_game():
 
     # displaying the score on the top right
     scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15,
-                                        fill="white", font=custom_font2, text=score_text)
+                                        fill="white", font=("OCR A Extended", 30), text=score_text)
 
     # Initialising the falling of asteroids
     asteroid_initial_position()
@@ -257,15 +307,6 @@ window = Tk()
 # Width and height of the window
 window_width = 1440
 window_height = 900
-
-""" custom font"""
-custom_font1 = Font(
-    family="OCR A Extended",
-    size=50)
-
-custom_font2 = Font(
-    family="OCR A Extended",
-    size=30)
 
 configure_window()
 
@@ -292,12 +333,12 @@ main_image = canvas_main.create_image(window_width / 2, window_height / 2,
 canvas_main.itemconfig(main_image, state="normal")
 
 welcome_text = canvas_main.create_text(window_width / 2, window_height / 2 - 30,
-                                       fill="white", font=custom_font1,
+                                       fill="white", font=("OCR A Extended", 60),
                                        text="Hello " + str(os.getlogin()))
 
 # Press any key to continue to start menu
 press_any_key = canvas_main.create_text(window_width / 2, window_height / 2 + 30,
-                                        fill="white", font=custom_font2,
+                                        fill="white", font=("OCR A Extended", 40),
                                         text="Please press enter to continue")
 
 """ Start button """
