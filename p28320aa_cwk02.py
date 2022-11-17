@@ -272,7 +272,10 @@ def asteroid_falling_down():
     pos_asteroid = canvas_main.coords(asteroid[0])
     asteroid_pos = canvas_main.coords(asteroid[0])
     spaceship_pos = canvas_main.coords(spaceship)
-    game_over = overlapping(asteroid_pos, spaceship_pos)
+
+    # Collision detection
+    game_over = 110 > sqrt(pow(asteroid_pos[0] - spaceship_pos[0], 2) + pow(asteroid_pos[1] - spaceship_pos[1], 2))
+
     if pos_asteroid[1] != window_height and pause_game is False and not game_over:
         canvas_main.coords(asteroid[0], pos_asteroid[0], pos_asteroid[1] + 10)
         after = window.after(10, asteroid_falling_down)
@@ -292,14 +295,6 @@ def asteroid_falling_down():
                                             font=("OCR A Extended", 120), text="Game Over")
 
         canvas_main.after(1000, game_over_buttons)
-
-
-
-# collision detection
-def overlapping(a, b):
-    if 110 > sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2)):
-        return True
-    return False
 
 
 def restart_game():
