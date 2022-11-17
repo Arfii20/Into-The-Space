@@ -8,6 +8,7 @@
 * The speed of the asteroids will increase making the game harder and harder at each level.
 """
 import os
+import time
 # game_icon.ico source: https://www.freeiconspng.com/img/17270
 # spaceship_image.png source: https://www.pngkey.com/detail/u2q8a9t4r5y3a9r5_spaceship-png-file-spaceship-png/
 # asteroid_1.png source: https://www.pngwing.com/en/free-png-yoygi
@@ -32,6 +33,7 @@ from tkinter.font import Font
 from PIL import Image, ImageTk
 from random import randint
 from os import getlogin
+from math import sqrt, pow
 
 
 # from s
@@ -78,6 +80,20 @@ def hidden_buttons():
     canvas_main.itemconfig(options, state="hidden")
 
 
+def bind_keys():
+    canvas_main.bind("<Left>", move_spaceship_left)
+    canvas_main.bind("<Right>", move_spaceship_right)
+    canvas_main.bind("<Up>", move_spaceship_up)
+    canvas_main.bind("<Down>", move_spaceship_down)
+
+
+def unbind_keys():
+    canvas_main.unbind("<Left>")
+    canvas_main.unbind("<Right>")
+    canvas_main.unbind("<Up>")
+    canvas_main.unbind("<Down>")
+
+
 # Creates the main menu page and buttons
 def main_menu(_):
     # Deleting the text
@@ -117,6 +133,7 @@ def pause_menu(_):
         canvas_main.itemconfig(restarted, state="normal")
         normal_buttons()
         canvas_main.itemconfig(main_image, state="normal")
+        unbind_keys()
 
     # unpauses the game and hides buttons
     elif pause_game:
@@ -125,6 +142,7 @@ def pause_menu(_):
         canvas_main.itemconfig(restarted, state="hidden")
         canvas_main.itemconfig(main_image, state="hidden")
         hidden_buttons()
+        bind_keys()
 
         # calls the falling function as long as not paused
         asteroid_falling_down()
@@ -238,16 +256,36 @@ def asteroid_initial_position():
 def asteroid_falling_down():
     global asteroid, score, after
     pos_asteroid = canvas_main.coords(asteroid[0])
-    if pos_asteroid[1] != window_height and pause_game is False:
+    asteroid_pos = canvas_main.coords(asteroid[0])
+    spaceship_pos = canvas_main.coords(spaceship)
+    game_over = overlapping(asteroid_pos, spaceship_pos)
+    if pos_asteroid[1] != window_height and pause_game is False and not game_over:
         canvas_main.coords(asteroid[0], pos_asteroid[0], pos_asteroid[1] + 10)
         after = window.after(10, asteroid_falling_down)
-    elif not pause_game:
+
+    elif not pause_game and not game_over:
         # Increasing score
         score += 20
         score_txt = "Score: " + str(score)
         canvas_main.itemconfig(scoreText, text=score_txt)
-
         asteroid_initial_position()
+
+    elif game_over:
+        unbind_keys()
+        canvas_main.unbind("<Escape>")
+        canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
+                                            font=("OCR A Extended", 120), text="Game Over")
+        #
+        # canvas_main.itemconfig(restarted, state="normal")
+        # canvas_main.itemconfig(exited, state="normal")
+
+
+
+# collision detection
+def overlapping(a, b):
+    if 110 > sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2)):
+        return True
+    return False
 
 
 def restart_game():
@@ -281,10 +319,7 @@ def main_game():
     add_images()
 
     """ Keybindings """
-    canvas_main.bind("<Left>", move_spaceship_left)
-    canvas_main.bind("<Right>", move_spaceship_right)
-    canvas_main.bind("<Up>", move_spaceship_up)
-    canvas_main.bind("<Down>", move_spaceship_down)
+    bind_keys()
     canvas_main.bind("<Escape>", pause_menu)
     canvas_main.focus_set()
 
@@ -394,7 +429,7 @@ spaceship_org = Image.open("images/spaceship_image.png")
 spaceship_resized = spaceship_org.resize((100, 100), Image.Resampling.LANCZOS)
 spaceship_image = ImageTk.PhotoImage(spaceship_resized)
 spaceship = canvas_main.create_image(window_width / 2 - 40,
-                                     window_height - window_height / 7,
+                                     window_height - window_height / 6,
                                      image=spaceship_image, anchor="nw")
 canvas_main.itemconfig(spaceship, state="hidden")
 
