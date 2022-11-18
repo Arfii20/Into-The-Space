@@ -15,6 +15,7 @@ import pickle
 # asteroid_3.png source: https://pngimg.com/image/105498
 # asteroid_4.png source: https://pngimg.com/image/105494
 # main.png: https://www.pngitem.com/middle/wmmbxo_asteroids-asteroid-mining-transparent-background-asteroids-png-png/
+# spreadsheet: https://upload.wikimedia.org/wikipedia/commons/2/25/LibreOffice_7.2.4.1_Calc_with_csv_screenshot.png
 
 # options.png source: http://pixelartmaker.com/art/e996fd04f0c49f2
 # start.png source: http://pixelartmaker.com/art/6a45404d913e6d1
@@ -27,7 +28,6 @@ import pickle
 # load.png source: http://pixelartmaker.com/art/84432c853ed5006
 # save.png source: http://pixelartmaker.com/art/154309787c95a2f
 
-
 from tkinter import Tk, Canvas, Button, Label, Frame, ttk
 from tkinter.font import Font
 from PIL import Image, ImageTk
@@ -36,10 +36,16 @@ from os import getlogin
 from math import sqrt, pow
 from time import sleep
 from pickle import dump as dmp, load as ld
+from webbrowser import open as opn
 
 
 # Configure main window
 def configure_window():
+    """
+    Adds title, icon and fixes the size of the main window
+    Makes the main window not resizable to minimise complexity.
+    Fixes the geometry such that the window is always opened at the center.
+    """
     window.title("Asteroid Game")
     window.iconbitmap("images/game_icon.ico")
 
@@ -63,53 +69,88 @@ def configure_window():
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 
-def bind_keys():
-    canvas_main.bind("<Left>", move_spaceship_left)
-    canvas_main.bind("<Right>", move_spaceship_right)
-    canvas_main.bind("<Up>", move_spaceship_up)
-    canvas_main.bind("<Down>", move_spaceship_down)
-
-
 def unbind_keys():
+    """
+    Unbinds the movement keys of the spaceship
+    """
     canvas_main.unbind("<Left>")
     canvas_main.unbind("<Right>")
     canvas_main.unbind("<Up>")
     canvas_main.unbind("<Down>")
 
 
+def bind_keys():
+    """
+    Binds the movement keys of the spaceship
+    """
+    canvas_main.bind("<Left>", move_spaceship_left)
+    canvas_main.bind("<Right>", move_spaceship_right)
+    canvas_main.bind("<Up>", move_spaceship_up)
+    canvas_main.bind("<Down>", move_spaceship_down)
+
+
 # Creating keybindings to move the spaceship
 def move_spaceship_left(_):
+    """
+    Moves spaceship left 15 pixels everytime it is called
+    """
+
     canvas_main.move(spaceship, -15, 0)
 
 
 def move_spaceship_right(_):
+    """
+    Moves spaceship right 15 pixels everytime it is called
+    """
     canvas_main.move(spaceship, 15, 0)
 
 
 def move_spaceship_up(_):
+    """
+    Moves spaceship up 15 pixels everytime it is called
+    """
     canvas_main.move(spaceship, 0, -15)
 
 
 def move_spaceship_down(_):
+    """
+    Moves spaceship down 15 pixels everytime it is called
+    """
     canvas_main.move(spaceship, 0, 15)
 
 
-# sets the state of the selected buttons to hidden
-def normal_buttons():
-    canvas_main.itemconfig(options, state="normal")
-    canvas_main.itemconfig(exited, state="normal")
-    canvas_main.itemconfig(leaderboards, state="normal")
+def boss_key(_):
+    """
+    When tab is clicked, it opens the boss.css file.
+    """
+    opn("boss.css")
 
 
 # sets the state of the selected buttons to hidden
 def hidden_buttons():
+    """
+    Hides the exit, leaderboard and options buttons
+    """
     canvas_main.itemconfig(exited, state="hidden")
     canvas_main.itemconfig(leaderboards, state="hidden")
     canvas_main.itemconfig(options, state="hidden")
 
 
+# sets the state of the selected buttons to hidden
+def normal_buttons():
+    """
+    Makes the exit, leaderboard and options buttons visible again
+    """
+    canvas_main.itemconfig(options, state="normal")
+    canvas_main.itemconfig(exited, state="normal")
+    canvas_main.itemconfig(leaderboards, state="normal")
+
+
 # Moves the buttons up/down the y-axis
 def shift_buttons(y):
+    """
+    Used for changing the button positions along the y-axis
+    """
     canvas_main.coords(resume, resume_coords[0], resume_coords[1] + y)
     canvas_main.coords(restarted, restart_coords[0], restart_coords[1] + y)
     canvas_main.coords(exited, exit_coords[0], exit_coords[1] + y)
@@ -118,6 +159,9 @@ def shift_buttons(y):
 
 
 def game_over_buttons():
+    """
+    When the game is over, this function is called and it displays all the buttons again.
+    """
     normal_buttons()
     canvas_main.itemconfig(Game_over_score, state="normal", text="Score: " + str(score))
     canvas_main.itemconfig(restarted, state="normal")
@@ -128,9 +172,15 @@ def game_over_buttons():
 
 # Creates the main menu page and buttons
 def main_menu(_):
+    """
+    This function removes the welcome screen and displays all the buttons.
+    """
     # Deleting the text
     canvas_main.delete(press_any_key)
     canvas_main.delete(welcome_text)
+
+    # Unbinds the enter button from first screen
+    canvas_main.unbind("<Return>")
 
     # Add buttons to main menu of canvas
     canvas_main.itemconfig(start, state="normal")
@@ -141,6 +191,10 @@ def main_menu(_):
 
 # Creating the pause menu
 def pause_menu(_):
+    """
+    When escape is clicked, the game is paused which stop everything and displays all the buttons
+    When escape is clicked again, the game removes buttons and continues the game.
+    """
     global pause_game
 
     # pauses the game and adds buttons
@@ -173,6 +227,9 @@ def pause_menu(_):
 
 # Resumes the game through button click
 def resume_button_click():
+    """
+    When resume button is clicked, clears the buttons from the screen and resumes all the processes
+    """
     global pause_game
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
@@ -185,10 +242,15 @@ def resume_button_click():
 
 
 def restart_game():
-    global restart_flag, pause_game, asteroid_speed
+    """
+    When restart button is clicked, this function clears all the items and
+    launches the main game function which starts the game from beginning.
+    """
+    global restart_flag, pause_game, score
     pause_game = False
     restart_flag = True
     asteroid_speed = 4
+    score = 0
 
     if score != 0:
         file = open("leaderboard.txt", "a")
@@ -212,6 +274,10 @@ def options_button_click():
 
 
 def leaderboard():
+    """
+    Makes the leaderboard which displays the top 10 scores in descending order.
+    Hides all the previous widgets and uses file handling to sort and display scores.
+    """
     # Packing the outer leaderboard frame
     leaderboard_frame_outer.pack(fill="both", expand=1)
 
@@ -280,6 +346,10 @@ def leaderboard():
 
 
 def leaderboard_clear():
+    """
+    Clears the screen and brings out the buttons after exit is clicked on.
+    Configured for 3 different cases as leaderboard can be accessed from 3 places.
+    """
     global leaderboard_frame_outer
     for widget in leaderboard_frame_outer.winfo_children():
         widget.destroy()
@@ -299,6 +369,10 @@ def leaderboard_clear():
 
 
 def asteroid_falling_collision():
+    """
+    Keeps the asteroid falling loop running till the game is over.
+    The collision detection and finds when game over.
+    """
     global game_over_text, pause_game, game_over, score, asteroid_speed, spaceship_pos
 
     canvas_main.itemconfig(Level, )
@@ -353,9 +427,13 @@ def asteroid_falling_collision():
 
 # Creating main game function
 def main_game():
+    """
+    Initiates all the widgets and starts the main game.
+    Hides the previous buttons and binds the keys to control the spaceship.
+    Initials scoring system and asteroid's initial position.
+    """
     global score, scoreText, restart_flag, asteroid
 
-    canvas_main.unbind("<Return>")
     shift_buttons(50)
 
     # Display only if the game starts from 0
@@ -390,6 +468,7 @@ def main_game():
                                         fill="white", font=("OCR A Extended", 30), text=score_text)
     canvas_main.focus(score_text)
 
+    """ Stores the initial asteroid positions to a list """
     asteroid = []
     for _ in range(4):
         asteroid_x = randint(50, window_width - 110)
@@ -403,6 +482,10 @@ def main_game():
 
 
 def save_game():
+    """
+    Saves the score, speed and spaceship position for the player to load later.
+    Unfortunately this does not save the asteroid positions
+    """
     global score, asteroid_speed, spaceship_pos
 
     dmp(score, open("save/score.bat", "wb"))
@@ -411,6 +494,11 @@ def save_game():
 
 
 def load_game():
+    """
+    Loads the game from last saved files and resets the on-screen widgets.
+    It loads everything apart from the asteroids from last session.
+    The asteroids are newly formed after this load.
+    """
     global score, asteroid_speed, restart_flag, pause_game, game_over
 
     score = ld(open("save/score.bat", "rb"))
@@ -458,6 +546,9 @@ leaderboard_frame_outer = Frame(canvas_main)
 Game_over_score = canvas_main.create_text(window_width / 2, window_height / 4, fill="white",
                                           font=("OCR A Extended", 60))
 canvas_main.itemconfig(Game_over_score, state="hidden")
+
+""" Boss Key """
+canvas_main.bind("<Tab>", boss_key)
 
 """Adding Background to the main game"""
 color = ["white", "#fefefe", "#dfdfdf", "#ad7f00", "#828181"]
