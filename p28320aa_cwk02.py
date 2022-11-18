@@ -60,6 +60,37 @@ def configure_window():
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 
+def bind_keys():
+    canvas_main.bind("<Left>", move_spaceship_left)
+    canvas_main.bind("<Right>", move_spaceship_right)
+    canvas_main.bind("<Up>", move_spaceship_up)
+    canvas_main.bind("<Down>", move_spaceship_down)
+
+
+def unbind_keys():
+    canvas_main.unbind("<Left>")
+    canvas_main.unbind("<Right>")
+    canvas_main.unbind("<Up>")
+    canvas_main.unbind("<Down>")
+
+
+# Creating keybindings to move the spaceship
+def move_spaceship_left(_):
+    canvas_main.move(spaceship, -15, 0)
+
+
+def move_spaceship_right(_):
+    canvas_main.move(spaceship, 15, 0)
+
+
+def move_spaceship_up(_):
+    canvas_main.move(spaceship, 0, -15)
+
+
+def move_spaceship_down(_):
+    canvas_main.move(spaceship, 0, 15)
+
+
 # sets the state of the selected buttons to hidden
 def normal_buttons():
     canvas_main.itemconfig(options, state="normal")
@@ -83,18 +114,11 @@ def shift_buttons(y):
     canvas_main.coords(options, options_coords[0], options_coords[1] + y)
 
 
-def bind_keys():
-    canvas_main.bind("<Left>", move_spaceship_left)
-    canvas_main.bind("<Right>", move_spaceship_right)
-    canvas_main.bind("<Up>", move_spaceship_up)
-    canvas_main.bind("<Down>", move_spaceship_down)
-
-
-def unbind_keys():
-    canvas_main.unbind("<Left>")
-    canvas_main.unbind("<Right>")
-    canvas_main.unbind("<Up>")
-    canvas_main.unbind("<Down>")
+def game_over_buttons():
+    normal_buttons()
+    canvas_main.itemconfig(Game_over_score, state="normal", text="Score: " + str(score))
+    canvas_main.itemconfig(restarted, state="normal")
+    canvas_main.delete(game_over_text)
 
 
 # Creates the main menu page and buttons
@@ -106,30 +130,6 @@ def main_menu(_):
     # Add buttons to main menu of canvas
     canvas_main.itemconfig(start, state="normal")
     normal_buttons()
-
-
-# Creating keybindings to move the spaceship
-def move_spaceship_left(_):
-    canvas_main.move(spaceship, -15, 0)
-
-
-def move_spaceship_right(_):
-    canvas_main.move(spaceship, 15, 0)
-
-
-def move_spaceship_up(_):
-    canvas_main.move(spaceship, 0, -15)
-
-
-def move_spaceship_down(_):
-    canvas_main.move(spaceship, 0, 15)
-
-
-def game_over_buttons():
-    normal_buttons()
-    canvas_main.itemconfig(Game_over_score, state="normal")
-    canvas_main.itemconfig(restarted, state="normal")
-    canvas_main.delete(game_over_text)
 
 
 # Creating the pause menu
@@ -169,6 +169,28 @@ def resume_button_click():
     hidden_buttons()
     pause_game = False
     asteroid_falling_collision()
+
+
+def restart_game():
+    global restart_flag, pause_game, asteroid_speed
+    pause_game = False
+    restart_flag = True
+    asteroid_speed = 4
+
+    if score != 0:
+        file = open("leaderboard.txt", "a")
+        file.write("\n" + str(score))
+        file.close()
+
+    canvas_main.itemconfig(resume, state="hidden")
+    canvas_main.itemconfig(restarted, state="hidden")
+    canvas_main.itemconfig(Game_over_score, state="hidden")
+    canvas_main.itemconfig(Level, text="      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids")
+    canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
+    for j in asteroid:
+        canvas_main.delete(j)
+    hidden_buttons()
+    main_game()
 
 
 def options_button_click():
@@ -229,9 +251,12 @@ def leaderboard():
         Label(leaderboard_frame, text="Nothing to show here\n", font=("OCR A Extended", 25),
               bg="black", fg="white").pack(anchor="w", padx=50)
     else:
+        count = 1
         for idx, val in enumerate(lines, start=1):
-            Label(leaderboard_frame, text=(str(idx) + ". " + str(val)), bg="black", fg="white",
+            if count <= 10:
+                Label(leaderboard_frame, text=(str(idx) + ". " + str(val)), bg="black", fg="white",
                   font=("OCR A Extended", 20)).pack(anchor="w", padx=50)
+                count += 1
     file.close()
 
     exit_leaderboard = Button(canvas_leaderboard, image=back_image, bg="black", border=0, command=leaderboard_clear)
@@ -291,10 +316,11 @@ def asteroid_falling_collision():
                 canvas_main.itemconfig(Level, state="hidden")
                 canvas_main.itemconfig(scoreText, state="hidden")
 
-                file = open("leaderboard.txt", "a")
-                file.write("\n" + str(score))
+                if score != 0:
+                    file = open("leaderboard.txt", "a")
+                    file.write("\n" + str(score))
+                    file.close()
 
-                file.close()
                 canvas_main.after(1000, game_over_buttons)
                 break
             canvas_main.move(asteroid[i], 0, y[i])
@@ -303,22 +329,6 @@ def asteroid_falling_collision():
             window.update()
             continue
         break
-
-
-def restart_game():
-    global restart_flag, pause_game, asteroid_speed
-    pause_game = False
-    restart_flag = True
-    asteroid_speed = 4
-    canvas_main.itemconfig(resume, state="hidden")
-    canvas_main.itemconfig(restarted, state="hidden")
-    canvas_main.itemconfig(Game_over_score, state="hidden")
-    canvas_main.itemconfig(Level, text="      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids")
-    canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
-    for j in asteroid:
-        canvas_main.delete(j)
-    hidden_buttons()
-    main_game()
 
 
 # Creating main game function
@@ -394,7 +404,7 @@ leaderboard_frame_outer = Frame(canvas_main)
 
 """ Score display after game over """
 Game_over_score = canvas_main.create_text(window_width / 2, window_height / 4, fill="white",
-                                          font=("OCR A Extended", 60), text="Score: " + str(score))
+                                          font=("OCR A Extended", 60))
 canvas_main.itemconfig(Game_over_score, state="hidden")
 
 """Adding Background to the main game"""
