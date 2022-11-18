@@ -7,7 +7,7 @@
 * The difficulty increases at certain scores.
 * The speed of the asteroids will increase making the game harder and harder at each level.
 """
-
+import pickle
 # game_icon.ico source: https://www.freeiconspng.com/img/17270
 # spaceship_image.png source: https://www.pngkey.com/detail/u2q8a9t4r5y3a9r5_spaceship-png-file-spaceship-png/
 # asteroid_1.png source: https://www.pngwing.com/en/free-png-yoygi
@@ -24,6 +24,8 @@
 # resume.png source: http://pixelartmaker.com/art/5be181b34875416
 # leaderboard.png source: http://pixelartmaker.com/art/7cc98bfa5bbcc0b
 # back.png source: http://pixelartmaker.com/art/fe696dcfb337a49
+# load.png source: http://pixelartmaker.com/art/84432c853ed5006
+# save.png source: http://pixelartmaker.com/art/154309787c95a2f
 
 
 from tkinter import Tk, Canvas, Button, Label, Frame, ttk
@@ -33,6 +35,7 @@ from random import randint, shuffle
 from os import getlogin
 from math import sqrt, pow
 from time import sleep
+from pickle import dump as dmp, load as ld
 
 
 # Configure main window
@@ -118,6 +121,8 @@ def game_over_buttons():
     normal_buttons()
     canvas_main.itemconfig(Game_over_score, state="normal", text="Score: " + str(score))
     canvas_main.itemconfig(restarted, state="normal")
+    canvas_main.itemconfig(load, state="normal")
+    canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
     canvas_main.delete(game_over_text)
 
 
@@ -129,6 +134,8 @@ def main_menu(_):
 
     # Add buttons to main menu of canvas
     canvas_main.itemconfig(start, state="normal")
+    canvas_main.itemconfig(load, state="normal")
+
     normal_buttons()
 
 
@@ -143,6 +150,8 @@ def pause_menu(_):
 
         canvas_main.itemconfig(resume, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
+        canvas_main.itemconfig(save, state="normal")
+        canvas_main.itemconfig(Level, state="hidden")
         normal_buttons()
 
         unbind_keys()
@@ -152,7 +161,9 @@ def pause_menu(_):
         pause_game = False
         canvas_main.itemconfig(resume, state="hidden")
         canvas_main.itemconfig(restarted, state="hidden")
+        canvas_main.itemconfig(save, state="hidden")
         canvas_main.itemconfig(main_image, state="hidden")
+        canvas_main.itemconfig(Level, state="normal")
         hidden_buttons()
         bind_keys()
 
@@ -165,8 +176,10 @@ def resume_button_click():
     global pause_game
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
+    canvas_main.itemconfig(save, state="hidden")
     canvas_main.itemconfig(main_image, state="hidden")
     hidden_buttons()
+    bind_keys()
     pause_game = False
     asteroid_falling_collision()
 
@@ -185,6 +198,7 @@ def restart_game():
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
     canvas_main.itemconfig(Game_over_score, state="hidden")
+    canvas_main.itemconfig(save, state="hidden")
     canvas_main.itemconfig(Level, text="      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids")
     canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
     for j in asteroid:
@@ -221,7 +235,9 @@ def leaderboard():
     # Hides the main menu buttons
     canvas_main.itemconfig(main_image, state="hidden")
     canvas_main.itemconfig(start, state="hidden")
+    canvas_main.itemconfig(load, state="hidden")
     canvas_main.itemconfig(resume, state="hidden")
+    canvas_main.itemconfig(save, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
     hidden_buttons()
 
@@ -255,7 +271,7 @@ def leaderboard():
         for idx, val in enumerate(lines, start=1):
             if count <= 10:
                 Label(leaderboard_frame, text=(str(idx) + ". " + str(val)), bg="black", fg="white",
-                  font=("OCR A Extended", 20)).pack(anchor="w", padx=50)
+                      font=("OCR A Extended", 20)).pack(anchor="w", padx=50)
                 count += 1
     file.close()
 
@@ -270,17 +286,20 @@ def leaderboard_clear():
     leaderboard_frame_outer.pack_forget()
     if pause_game:
         canvas_main.itemconfig(resume, state="normal")
+        canvas_main.itemconfig(save, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
     elif game_over:
         game_over_buttons()
+        canvas_main.coords(load, window_width / 2, window_height / 2 - 100)
     else:
         canvas_main.itemconfig(start, state="normal")
+        canvas_main.itemconfig(load, state="normal")
     normal_buttons()
     canvas_main.itemconfig(main_image, state="normal")
 
 
 def asteroid_falling_collision():
-    global game_over_text, pause_game, game_over, score, asteroid_speed
+    global game_over_text, pause_game, game_over, score, asteroid_speed, spaceship_pos
 
     canvas_main.itemconfig(Level, )
 
@@ -315,6 +334,7 @@ def asteroid_falling_collision():
                                                          font=("OCR A Extended", 120), text="Game Over")
                 canvas_main.itemconfig(Level, state="hidden")
                 canvas_main.itemconfig(scoreText, state="hidden")
+                canvas_main.coords(load, window_width / 2, window_height / 2 - 100)
 
                 if score != 0:
                     file = open("leaderboard.txt", "a")
@@ -338,9 +358,14 @@ def main_game():
     canvas_main.unbind("<Return>")
     shift_buttons(50)
 
+    # Display only if the game starts from 0
+    if score == 0:
+        canvas_main.itemconfig(Level, text=("      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids"))
+
     # Hides the main menu buttons
     canvas_main.itemconfig(main_image, state="hidden")
     canvas_main.itemconfig(start, state="hidden")
+    canvas_main.itemconfig(load, state="hidden")
     hidden_buttons()
 
     # Deletes the scoreText when restarting
@@ -358,7 +383,6 @@ def main_game():
 
     """ Making the scoring system """
     # storing and displaying the score
-    score = 0
     score_text = "Score: " + str(score)
 
     # displaying the score on the top right
@@ -377,6 +401,34 @@ def main_game():
     canvas_main.itemconfig(Level, state="normal")
     asteroid_falling_collision()
 
+
+def save_game():
+    global score, asteroid_speed, spaceship_pos
+
+    dmp(score, open("save/score.bat", "wb"))
+    dmp(asteroid_speed, open("save/asteroid_speed.bat", "wb"))
+    dmp(spaceship_pos, open("save/spaceship_pos.bat", "wb"))
+
+
+def load_game():
+    global score, asteroid_speed, restart_flag, pause_game, game_over
+
+    score = ld(open("save/score.bat", "rb"))
+    asteroid_speed = ld(open("save/asteroid_speed.bat", "rb"))
+
+    ship_pos = ld(open("save/spaceship_pos.bat", "rb"))
+    canvas_main.coords(spaceship, ship_pos[0], ship_pos[1])
+
+    canvas_main.itemconfig(load, state="hidden")
+    canvas_main.itemconfig(restarted, state="hidden")
+    canvas_main.itemconfig(Game_over_score, state="hidden")
+
+    if game_over:
+        for j in asteroid:
+            canvas_main.delete(j)
+    hidden_buttons()
+    main_game()
+    
 
 window = Tk()
 
@@ -421,8 +473,7 @@ for _ in range(300):
     canvas_main.create_oval(bg_x, bg_y, bg_x + size, bg_y + size, fill=color[color_chooser])
 
 # Level text that will be shown upon each level
-Level = canvas_main.create_text(window_width / 2, window_height / 10, fill="white", font=("OCR A Extended", 25),
-                                text=("      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids"))
+Level = canvas_main.create_text(window_width / 2, window_height / 10, fill="white", font=("OCR A Extended", 25))
 
 canvas_main.itemconfig(Level, state="hidden")
 
@@ -447,7 +498,7 @@ start_org = Image.open("images/start.png")
 start_resized = start_org.resize((200, 75), Image.Resampling.LANCZOS)
 start_image = ImageTk.PhotoImage(start_resized)
 start_button = Button(window, image=start_image, bg="black", border=0, command=main_game)
-start = canvas_main.create_window(window_width / 2, window_height / 2 - 165, window=start_button)
+start = canvas_main.create_window(window_width / 2, window_height / 2 - 200, window=start_button)
 canvas_main.itemconfig(start, state="hidden")
 start_coords = canvas_main.coords(start)
 
@@ -456,7 +507,7 @@ options_org = Image.open("images/options.png")
 options_resized = options_org.resize((240, 75), Image.Resampling.LANCZOS)
 options_image = ImageTk.PhotoImage(options_resized)
 options_button = Button(window, image=options_image, bg="black", border=0, command=options_button_click)
-options = canvas_main.create_window(window_width / 2, window_height / 2 + 55, window=options_button)
+options = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=options_button)
 canvas_main.itemconfig(options, state="hidden")
 options_coords = canvas_main.coords(options)
 
@@ -465,7 +516,7 @@ exit_org = Image.open("images/exit.png")
 exit_resized = exit_org.resize((200, 70), Image.Resampling.LANCZOS)
 exit_image = ImageTk.PhotoImage(exit_resized)
 exit_button = Button(window, image=exit_image, bg="black", border=0, command=window.destroy)
-exited = canvas_main.create_window(window_width / 2, window_height / 2 + 165, window=exit_button)
+exited = canvas_main.create_window(window_width / 2, window_height / 2 + 200, window=exit_button)
 canvas_main.itemconfig(exited, state="hidden")
 exit_coords = canvas_main.coords(exited)
 
@@ -474,7 +525,7 @@ resume_org = Image.open("images/resume.png")
 resume_resized = resume_org.resize((244, 80), Image.Resampling.LANCZOS)
 resume_image = ImageTk.PhotoImage(resume_resized)
 resume_button = Button(window, image=resume_image, border=0, bg="black", command=resume_button_click)
-resume = canvas_main.create_window(window_width / 2, window_height / 2 - 275, window=resume_button)
+resume = canvas_main.create_window(window_width / 2, window_height / 2 - 300, window=resume_button)
 canvas_main.itemconfig(resume, state="hidden")
 resume_coords = canvas_main.coords(resume)
 
@@ -483,7 +534,7 @@ restart_org = Image.open("images/restart.png")
 restart_resized = restart_org.resize((244, 80), Image.Resampling.LANCZOS)
 restart_image = ImageTk.PhotoImage(restart_resized)
 restart_button = Button(window, image=restart_image, border=0, bg="black", command=restart_game)
-restarted = canvas_main.create_window(window_width / 2, window_height / 2 - 165, window=restart_button)
+restarted = canvas_main.create_window(window_width / 2, window_height / 2 - 200, window=restart_button)
 canvas_main.itemconfig(restarted, state="hidden")
 restart_coords = canvas_main.coords(restarted)
 
@@ -492,14 +543,33 @@ leaderboard_org = Image.open("images/leaderboard.png")
 leaderboard_resized = leaderboard_org.resize((474, 80), Image.Resampling.LANCZOS)
 leaderboard_image = ImageTk.PhotoImage(leaderboard_resized)
 leaderboard_button = Button(window, image=leaderboard_image, border=0, bg="black", command=leaderboard)
-leaderboards = canvas_main.create_window(window_width / 2, window_height / 2 - 55, window=leaderboard_button)
+leaderboards = canvas_main.create_window(window_width / 2, window_height / 2, window=leaderboard_button)
 canvas_main.itemconfig(leaderboards, state="hidden")
 leaderboard_coords = canvas_main.coords(leaderboards)
+
+""" save button """
+save_org = Image.open("images/save.png")
+save_resized = save_org.resize((204, 80), Image.Resampling.LANCZOS)
+save_image = ImageTk.PhotoImage(save_resized)
+save_button = Button(window, image=save_image, border=0, bg="black", command=save_game)
+save = canvas_main.create_window(window_width / 2, window_height / 2 - 50, window=save_button)
+canvas_main.itemconfig(save, state="hidden")
+save_coords = canvas_main.coords(save)
+
+""" load button """
+load_org = Image.open("images/load.png")
+load_resized = load_org.resize((204, 80), Image.Resampling.LANCZOS)
+load_image = ImageTk.PhotoImage(load_resized)
+load_button = Button(window, image=load_image, border=0, bg="black", command=load_game)
+load = canvas_main.create_window(window_width / 2, window_height / 2 - 100, window=load_button)
+canvas_main.itemconfig(load, state="hidden")
+load_coords = canvas_main.coords(load)
 
 """ back button """
 back_org = Image.open("images/back.png")
 back_resized = back_org.resize((204, 80), Image.Resampling.LANCZOS)
 back_image = ImageTk.PhotoImage(back_resized)
+
 
 """ Spaceship """
 spaceship_org = Image.open("images/spaceship_image.png")
