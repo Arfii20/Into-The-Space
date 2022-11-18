@@ -233,18 +233,26 @@ def add_images():
 
 
 def asteroid_falling_collision():
-    global game_over_text, pause_game, game_over, score
+    global game_over_text, pause_game, game_over, score, asteroid_speed
 
-    y = [5] * 4
+    canvas_main.itemconfig(Level, )
 
     while not pause_game:
+        y = [asteroid_speed] * 4
         for i in range(4):
             pos = canvas_main.coords(asteroid[i])
             if pos[1] >= window_height:
                 canvas_main.coords(asteroid[i], randint(50, window_width - 110), randint(-500, 0))
-                score += 20
+                score += 10
                 score_txt = "Score: " + str(score)
                 canvas_main.itemconfig(scoreText, text=score_txt)
+                if score != 0 and score % 100 == 0:
+                    asteroid_speed += 1
+                    canvas_main.itemconfig(Level, state="normal",
+                                           text=("Level " + str(asteroid_speed - 3) + ": Speed increased"))
+                elif (score - 40) % 100 == 0:
+                    canvas_main.itemconfig(Level, state="hidden")
+
             asteroid_pos = canvas_main.coords(asteroid[i])
             spaceship_pos = canvas_main.coords(spaceship)
 
@@ -269,14 +277,15 @@ def asteroid_falling_collision():
 
 
 def restart_game():
-    global restart_flag, pause_game
+    global restart_flag, pause_game, asteroid_speed
     pause_game = False
     restart_flag = True
+    asteroid_speed = 4
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
+    canvas_main.itemconfig(Level, text="      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids")
     for j in asteroid:
         canvas_main.delete(j)
-
     hidden_buttons()
     main_game()
 
@@ -324,7 +333,7 @@ def main_game():
         asteroid.append(canvas_main.create_image(asteroid_x, asteroid_y,
                                                  image=asteroid_image[asteroid_select],
                                                  anchor="nw"))
-
+    canvas_main.itemconfig(Level, state="normal")
     asteroid_falling_collision()
 
 
@@ -341,6 +350,7 @@ configure_window()
 pause_game = False
 restart_flag = False
 score = 0
+asteroid_speed = 4
 
 """ Creating the Canvas """
 canvas_main = Canvas(window, width=window_width, height=window_height, bg="black")
@@ -349,7 +359,7 @@ canvas_main.pack(fill="both", expand=True)
 """ Creating the leaderboard frame """
 leaderboard_frame = Frame(canvas_main, width=window_width, height=window_height, bg="black")
 
-"""Adding Background to the pain game"""
+"""Adding Background to the main game"""
 color = ["white", "#fefefe", "#dfdfdf", "#ad7f00", "#828181"]
 
 # Adding 300 starts to reduce lag
@@ -362,6 +372,11 @@ for _ in range(300):
 
     canvas_main.create_oval(bg_x, bg_y, bg_x + size, bg_y + size, fill=color[color_chooser])
 
+# Level text that will be shown upon each level
+Level = canvas_main.create_text(window_width / 2, window_height / 10, fill="white", font=("OCR A Extended", 25),
+                                text=("      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids"))
+
+canvas_main.itemconfig(Level, state="hidden")
 """ Start menu """
 # main menu image
 main_menu_image = ImageTk.PhotoImage(Image.open("images/main.png"))
@@ -370,12 +385,12 @@ main_image = canvas_main.create_image(window_width / 2, window_height / 2,
 canvas_main.itemconfig(main_image, state="normal")
 
 welcome_text = canvas_main.create_text(window_width / 2, window_height / 2 - 30,
-                                       fill="white", font=("OCR A Extended", 60),
+                                       fill="white", font=("OCR A Extended", 40),
                                        text="Hello " + str(getlogin()))
 
 # Press any key to continue to start menu
 press_any_key = canvas_main.create_text(window_width / 2, window_height / 2 + 30,
-                                        fill="white", font=("OCR A Extended", 40),
+                                        fill="white", font=("OCR A Extended", 25),
                                         text="Please press enter to continue")
 
 """ Start button """
