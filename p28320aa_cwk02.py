@@ -23,6 +23,7 @@
 # restart.png source: http://pixelartmaker.com/art/ad99f7494306997
 # resume.png source: http://pixelartmaker.com/art/5be181b34875416
 # leaderboard.png source: http://pixelartmaker.com/art/7cc98bfa5bbcc0b
+# back.png source: http://pixelartmaker.com/art/fe696dcfb337a49
 
 
 from tkinter import Tk, Canvas, Button, Label, Frame
@@ -187,7 +188,22 @@ def leaderboard():
     Label(leaderboard_frame, text="Leaderboard:\n", font=("OCR A Extended", 40),
           bg="black", fg="white").pack(anchor="w", padx=30, pady=(30, 0))
 
-    file = open("leaderboard.txt", "r")
+    unsorted = open("leaderboard.txt", "r")
+    words = unsorted.readlines()
+    for idx, val in enumerate(words):
+        if "\n" in val:
+            words[idx] = val[0:len(val) - 1]
+    words = [int(x) for x in words]
+    unsorted.close()
+
+    words.sort(reverse=True)
+
+    sorted = open("leaderboardsorted.txt", "w")
+    for i in words:
+        sorted.write(str(i) + "\n")
+    sorted.close()
+
+    file = open("leaderboardsorted.txt", "r")
     lines = file.readlines()
     if len(lines) == 0:
         Label(leaderboard_frame, text="Nothing to show here\n", font=("OCR A Extended", 40),
@@ -196,35 +212,27 @@ def leaderboard():
         for idx, val in enumerate(lines, start=1):
             Label(leaderboard_frame, text=(str(idx) + ". " + str(val)), bg="black", fg="white",
                   font=("OCR A Extended", 20)).pack(anchor="w", padx=30)
-        Button(leaderboard_frame, text="Click to clear history", command=clear_history).pack()
     file.close()
 
-    Button(leaderboard_frame, text="Click to close", command=leaderboard_clear).pack()
+    exit_leaderboard = Button(leaderboard_frame, image=back_image, bg="black", border=0, command=leaderboard_clear)
+    exit_leaderboard.place(x=window_width / 2 - 100, y=window_height - window_height / 7)
 
 
 def leaderboard_clear():
     global leaderboard_frame
+    for widget in leaderboard_frame.winfo_children():
+        widget.destroy()
     leaderboard_frame.pack_forget()
-    canvas_main.itemconfig(resume, state="normal")
-    canvas_main.itemconfig(start, state="normal")
+    if pause_game:
+        canvas_main.itemconfig(resume, state="normal")
+        canvas_main.itemconfig(restarted, state="normal")
+    elif game_over:
+        game_over_buttons()
+    else:
+        canvas_main.itemconfig(start, state="normal")
     normal_buttons()
     canvas_main.itemconfig(main_image, state="normal")
 
-
-def clear_history():
-    pass
-
-
-#     file = open("History.txt", "w")
-#     file.write("")
-#     file.close()
-#
-#     for i in lead
-#     label1 = Label(leaderboard_frame1, text="Match History:\n", font=40).pack(anchor="w", padx=20)
-#     label2 = Label(leaderboard_frame1, text="Nothing to show here\n", ).pack(anchor="w", padx=20)
-#     leaderboard_frame.destroy()
-#
-#     close = Button(leaderboard_frame1, text="Click to close", command=leaderboard_frame1.destroy).pack()
 
 def add_images():
     global spaceship
@@ -266,6 +274,9 @@ def asteroid_falling_collision():
                 canvas_main.unbind("<Escape>")
                 game_over_text = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
                                                          font=("OCR A Extended", 120), text="Game Over")
+                file = open("leaderboard.txt", "a")
+                file.write("\n" + str(score))
+                file.close()
                 canvas_main.after(1000, game_over_buttons)
                 break
             canvas_main.move(asteroid[i], 0, y[i])
@@ -284,6 +295,7 @@ def restart_game():
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
     canvas_main.itemconfig(Level, text="      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids")
+    canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
     for j in asteroid:
         canvas_main.delete(j)
     hidden_buttons()
@@ -446,6 +458,11 @@ leaderboard_button = Button(window, image=leaderboard_image, border=0, bg="black
 leaderboards = canvas_main.create_window(window_width / 2, window_height / 2 - 55, window=leaderboard_button)
 canvas_main.itemconfig(leaderboards, state="hidden")
 leaderboard_coords = canvas_main.coords(leaderboards)
+
+""" back button """
+back_org = Image.open("images/back.png")
+back_resized = back_org.resize((204, 80), Image.Resampling.LANCZOS)
+back_image = ImageTk.PhotoImage(back_resized)
 
 """ Spaceship """
 spaceship_org = Image.open("images/spaceship_image.png")
