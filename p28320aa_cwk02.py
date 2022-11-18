@@ -14,7 +14,6 @@
 # asteroid_2.png source: https://pngimg.com/image/105528
 # asteroid_3.png source: https://pngimg.com/image/105498
 # asteroid_4.png source: https://pngimg.com/image/105494
-# asteroid_5.png source: https://www.pngwing.com/en/free-png-tsprz
 # main.png: https://www.pngitem.com/middle/wmmbxo_asteroids-asteroid-mining-transparent-background-asteroids-png-png/
 
 # options.png source: http://pixelartmaker.com/art/e996fd04f0c49f2
@@ -29,14 +28,10 @@
 from tkinter import Tk, Canvas, Button, Label, Frame
 from tkinter.font import Font
 from PIL import Image, ImageTk
-from random import randint
+from random import randint, shuffle
 from os import getlogin
 from math import sqrt, pow
-
-
-# from s
-# from threading import Thread
-# from time import sleep
+from time import sleep
 
 
 # Configure main window
@@ -78,13 +73,14 @@ def hidden_buttons():
     canvas_main.itemconfig(options, state="hidden")
 
 
-# Moves the buttons up/down the y axis
+# Moves the buttons up/down the y-axis
 def shift_buttons(y):
     canvas_main.coords(resume, resume_coords[0], resume_coords[1] + y)
     canvas_main.coords(restarted, restart_coords[0], restart_coords[1] + y)
     canvas_main.coords(exited, exit_coords[0], exit_coords[1] + y)
     canvas_main.coords(leaderboards, leaderboard_coords[0], leaderboard_coords[1] + y)
     canvas_main.coords(options, options_coords[0], options_coords[1] + y)
+
 
 def bind_keys():
     canvas_main.bind("<Left>", move_spaceship_left)
@@ -134,6 +130,7 @@ def game_over_buttons():
     canvas_main.itemconfig(restarted, state="normal")
     canvas_main.delete(game_over_text)
 
+
 # Creating the pause menu
 def pause_menu(_):
     global pause_game
@@ -159,7 +156,7 @@ def pause_menu(_):
         bind_keys()
 
         # calls the falling function as long as not paused
-        asteroid_falling_down()
+        asteroid_falling_collision()
 
 
 # Resumes the game through button click
@@ -170,7 +167,7 @@ def resume_button_click():
     canvas_main.itemconfig(main_image, state="hidden")
     hidden_buttons()
     pause_game = False
-    asteroid_falling_down()
+    asteroid_falling_collision()
 
 
 def options_button_click():
@@ -178,8 +175,6 @@ def options_button_click():
 
 
 def leaderboard():
-    global leaderboard_frame
-    leaderboard_frame = Frame(canvas_main, width=window_width, height=window_height, bg="black")
     leaderboard_frame.pack(fill="both", expand=1)
 
     # Hides the main menu buttons
@@ -209,7 +204,7 @@ def leaderboard():
 
 def leaderboard_clear():
     global leaderboard_frame
-    leaderboard_frame.destroy()
+    leaderboard_frame.pack_forget()
     canvas_main.itemconfig(resume, state="normal")
     canvas_main.itemconfig(start, state="normal")
     normal_buttons()
@@ -236,65 +231,41 @@ def add_images():
     # Add spaceship to canvas
     canvas_main.itemconfig(spaceship, state="normal")
 
-    # List data structure to store asteroid images
-    global asteroid_image
-    asteroid_image = []
 
-    # Resize asteroid
-    for i in range(1, 6):
-        asteroid_org = Image.open("images/asteroid_" + str(i) + ".png")
-        asteroid_resized = asteroid_org.resize((120, 120), Image.Resampling.LANCZOS)
-        asteroid_image.append(ImageTk.PhotoImage(asteroid_resized))
+def asteroid_falling_collision():
+    global game_over_text, pause_game, game_over, score
 
+    y = [5] * 4
 
-# Determining from where the asteroid will start falling
-def asteroid_initial_position():
-    global asteroid
-    asteroid = []
+    while not pause_game:
+        for i in range(4):
+            pos = canvas_main.coords(asteroid[i])
+            if pos[1] >= window_height:
+                canvas_main.coords(asteroid[i], randint(50, window_width - 110), randint(-500, 0))
+                score += 20
+                score_txt = "Score: " + str(score)
+                canvas_main.itemconfig(scoreText, text=score_txt)
+            asteroid_pos = canvas_main.coords(asteroid[i])
+            spaceship_pos = canvas_main.coords(spaceship)
 
-    # Selecting initial position of the asteroid
-    asteroid_select = randint(0, 4)
-    asteroid_x = randint(50, window_width - 110)
-    asteroid_y = 0
+            # Collision detection
+            game_over = 110 > sqrt(pow(asteroid_pos[0] - spaceship_pos[0], 2)
+                                   + pow(asteroid_pos[1] - spaceship_pos[1], 2))
 
-    # Adding the position to an empty set for threading
-    asteroid.append(canvas_main.create_image(asteroid_x, asteroid_y,
-                                             image=asteroid_image[asteroid_select],
-                                             anchor="nw"))
-
-    # after selecting position, fall is initialised
-    asteroid_falling_down()
-
-
-# Function for making the asteroid fall
-def asteroid_falling_down():
-    global asteroid, score, after, game_over_text
-    pos_asteroid = canvas_main.coords(asteroid[0])
-    asteroid_pos = canvas_main.coords(asteroid[0])
-    spaceship_pos = canvas_main.coords(spaceship)
-
-    # Collision detection
-    game_over = 110 > sqrt(pow(asteroid_pos[0] - spaceship_pos[0], 2) + pow(asteroid_pos[1] - spaceship_pos[1], 2))
-
-    if pos_asteroid[1] != window_height and pause_game is False and not game_over:
-        canvas_main.coords(asteroid[0], pos_asteroid[0], pos_asteroid[1] + 10)
-        after = window.after(10, asteroid_falling_down)
-
-    elif not pause_game and not game_over:
-        # Increasing score
-        score += 20
-        score_txt = "Score: " + str(score)
-        canvas_main.itemconfig(scoreText, text=score_txt)
-        asteroid_initial_position()
-
-    # Game over
-    elif game_over:
-        unbind_keys()
-        canvas_main.unbind("<Escape>")
-        game_over_text = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
-                                            font=("OCR A Extended", 120), text="Game Over")
-
-        canvas_main.after(1000, game_over_buttons)
+            # Game over
+            if game_over:
+                unbind_keys()
+                canvas_main.unbind("<Escape>")
+                game_over_text = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
+                                                         font=("OCR A Extended", 120), text="Game Over")
+                canvas_main.after(1000, game_over_buttons)
+                break
+            canvas_main.move(asteroid[i], 0, y[i])
+        if not game_over:
+            sleep(0.0001)
+            window.update()
+            continue
+        break
 
 
 def restart_game():
@@ -303,14 +274,16 @@ def restart_game():
     restart_flag = True
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
+    for j in asteroid:
+        canvas_main.delete(j)
+
     hidden_buttons()
-    window.after_cancel(after)
     main_game()
 
 
 # Creating main game function
 def main_game():
-    global score, scoreText, restart_flag
+    global score, scoreText, restart_flag, asteroid
 
     canvas_main.unbind("<Return>")
     shift_buttons(50)
@@ -341,9 +314,18 @@ def main_game():
     # displaying the score on the top right
     scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15,
                                         fill="white", font=("OCR A Extended", 30), text=score_text)
+    canvas_main.focus(score_text)
 
-    # Initialising the falling of asteroids
-    asteroid_initial_position()
+    asteroid = []
+    for _ in range(4):
+        asteroid_x = randint(50, window_width - 110)
+        asteroid_y = randint(-1000, -100)
+        asteroid_select = randint(0, 3)
+        asteroid.append(canvas_main.create_image(asteroid_x, asteroid_y,
+                                                 image=asteroid_image[asteroid_select],
+                                                 anchor="nw"))
+
+    asteroid_falling_collision()
 
 
 window = Tk()
@@ -358,23 +340,27 @@ configure_window()
 # Variables
 pause_game = False
 restart_flag = False
+score = 0
 
 """ Creating the Canvas """
 canvas_main = Canvas(window, width=window_width, height=window_height, bg="black")
 canvas_main.pack(fill="both", expand=True)
 
+""" Creating the leaderboard frame """
+leaderboard_frame = Frame(canvas_main, width=window_width, height=window_height, bg="black")
+
 """Adding Background to the pain game"""
 color = ["white", "#fefefe", "#dfdfdf", "#ad7f00", "#828181"]
 
 # Adding 300 starts to reduce lag
-for i in range(300):
-    x = randint(0, window_width)
-    y = randint(0, window_height)
+for _ in range(300):
+    bg_x = randint(0, window_width)
+    bg_y = randint(0, window_height)
 
     size = randint(1, 5)
     color_chooser = randint(0, 4)
 
-    canvas_main.create_oval(x, y, x+size, y+size, fill=color[color_chooser])
+    canvas_main.create_oval(bg_x, bg_y, bg_x + size, bg_y + size, fill=color[color_chooser])
 
 """ Start menu """
 # main menu image
@@ -454,6 +440,13 @@ spaceship = canvas_main.create_image(window_width / 2 - 40,
                                      window_height - window_height / 6,
                                      image=spaceship_image, anchor="nw")
 canvas_main.itemconfig(spaceship, state="hidden")
+
+""" List data structure to store asteroid images """
+asteroid_image = []
+for m in range(1, 5):
+    asteroid_org = Image.open("images/asteroid_" + str(m) + ".png")
+    asteroid_resized = asteroid_org.resize((120, 120), Image.Resampling.LANCZOS)
+    asteroid_image.append(ImageTk.PhotoImage(asteroid_resized))
 
 canvas_main.bind("<Return>", main_menu)
 canvas_main.focus_set()
