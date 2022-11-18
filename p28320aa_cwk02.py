@@ -26,7 +26,7 @@
 # back.png source: http://pixelartmaker.com/art/fe696dcfb337a49
 
 
-from tkinter import Tk, Canvas, Button, Label, Frame
+from tkinter import Tk, Canvas, Button, Label, Frame, ttk
 from tkinter.font import Font
 from PIL import Image, ImageTk
 from random import randint, shuffle
@@ -127,7 +127,7 @@ def move_spaceship_down(_):
 
 def game_over_buttons():
     normal_buttons()
-    shift_buttons(-30)
+    canvas_main.itemconfig(Game_over_score, state="normal")
     canvas_main.itemconfig(restarted, state="normal")
     canvas_main.delete(game_over_text)
 
@@ -176,7 +176,25 @@ def options_button_click():
 
 
 def leaderboard():
-    leaderboard_frame.pack(fill="both", expand=1)
+    # Packing the outer leaderboard frame
+    leaderboard_frame_outer.pack(fill="both", expand=1)
+
+    # Creating a canvas for the leaderboard
+    canvas_leaderboard = Canvas(leaderboard_frame_outer, bg="black", border=0)
+    canvas_leaderboard.pack(side="left", fill="both", expand=1)
+
+    # Creating a scrollbar for the leaderboard
+    leaderboard_scrollbar = ttk.Scrollbar(leaderboard_frame_outer, orient="vertical", command=canvas_leaderboard.yview)
+    leaderboard_scrollbar.pack(side="right", fill="y")
+
+    " configure the leaderboard canvas "
+    canvas_leaderboard.configure(yscrollcommand=leaderboard_scrollbar.set)
+    canvas_leaderboard.bind("<Configure>",
+                            lambda e: canvas_leaderboard.configure(scrollregion=canvas_leaderboard.bbox("all")))
+
+    # Creating the main leaderboard frame
+    leaderboard_frame = Frame(canvas_leaderboard, width=window_width, height=window_height, bg="black", border=0)
+    canvas_leaderboard.create_window((0, 0), window=leaderboard_frame, anchor="nw")
 
     # Hides the main menu buttons
     canvas_main.itemconfig(main_image, state="hidden")
@@ -185,44 +203,46 @@ def leaderboard():
     canvas_main.itemconfig(restarted, state="hidden")
     hidden_buttons()
 
-    Label(leaderboard_frame, text="Leaderboard:\n", font=("OCR A Extended", 40),
-          bg="black", fg="white").pack(anchor="w", padx=30, pady=(30, 0))
+    Label(leaderboard_frame, text="Leaderboard:\n", font=("OCR A Extended", 35),
+          bg="black", fg="white").pack(anchor="w", padx=50, pady=(40, 0))
 
     unsorted = open("leaderboard.txt", "r")
     words = unsorted.readlines()
     for idx, val in enumerate(words):
         if "\n" in val:
             words[idx] = val[0:len(val) - 1]
+    if "" in words:
+        words.remove("")
     words = [int(x) for x in words]
     unsorted.close()
 
     words.sort(reverse=True)
 
-    sorted = open("leaderboardsorted.txt", "w")
+    file_sorted = open("leaderboardsorted.txt", "w")
     for i in words:
-        sorted.write(str(i) + "\n")
-    sorted.close()
+        file_sorted.write(str(i) + "\n")
+    file_sorted.close()
 
     file = open("leaderboardsorted.txt", "r")
     lines = file.readlines()
     if len(lines) == 0:
-        Label(leaderboard_frame, text="Nothing to show here\n", font=("OCR A Extended", 40),
-              bg="black", fg="white").pack(anchor="w", padx=30)
+        Label(leaderboard_frame, text="Nothing to show here\n", font=("OCR A Extended", 25),
+              bg="black", fg="white").pack(anchor="w", padx=50)
     else:
         for idx, val in enumerate(lines, start=1):
             Label(leaderboard_frame, text=(str(idx) + ". " + str(val)), bg="black", fg="white",
-                  font=("OCR A Extended", 20)).pack(anchor="w", padx=30)
+                  font=("OCR A Extended", 20)).pack(anchor="w", padx=50)
     file.close()
 
-    exit_leaderboard = Button(leaderboard_frame, image=back_image, bg="black", border=0, command=leaderboard_clear)
+    exit_leaderboard = Button(canvas_leaderboard, image=back_image, bg="black", border=0, command=leaderboard_clear)
     exit_leaderboard.place(x=window_width / 2 - 100, y=window_height - window_height / 7)
 
 
 def leaderboard_clear():
-    global leaderboard_frame
-    for widget in leaderboard_frame.winfo_children():
+    global leaderboard_frame_outer
+    for widget in leaderboard_frame_outer.winfo_children():
         widget.destroy()
-    leaderboard_frame.pack_forget()
+    leaderboard_frame_outer.pack_forget()
     if pause_game:
         canvas_main.itemconfig(resume, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
@@ -232,12 +252,6 @@ def leaderboard_clear():
         canvas_main.itemconfig(start, state="normal")
     normal_buttons()
     canvas_main.itemconfig(main_image, state="normal")
-
-
-def add_images():
-    global spaceship
-    # Add spaceship to canvas
-    canvas_main.itemconfig(spaceship, state="normal")
 
 
 def asteroid_falling_collision():
@@ -274,8 +288,12 @@ def asteroid_falling_collision():
                 canvas_main.unbind("<Escape>")
                 game_over_text = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
                                                          font=("OCR A Extended", 120), text="Game Over")
+                canvas_main.itemconfig(Level, state="hidden")
+                canvas_main.itemconfig(scoreText, state="hidden")
+
                 file = open("leaderboard.txt", "a")
                 file.write("\n" + str(score))
+
                 file.close()
                 canvas_main.after(1000, game_over_buttons)
                 break
@@ -294,6 +312,7 @@ def restart_game():
     asteroid_speed = 4
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
+    canvas_main.itemconfig(Game_over_score, state="hidden")
     canvas_main.itemconfig(Level, text="      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids")
     canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
     for j in asteroid:
@@ -320,7 +339,7 @@ def main_game():
         restart_flag = False
 
     # Adding all the images
-    add_images()
+    canvas_main.itemconfig(spaceship, state="normal")
 
     """ Keybindings """
     bind_keys()
@@ -361,6 +380,7 @@ configure_window()
 # Variables
 pause_game = False
 restart_flag = False
+game_over = False
 score = 0
 asteroid_speed = 4
 
@@ -368,8 +388,14 @@ asteroid_speed = 4
 canvas_main = Canvas(window, width=window_width, height=window_height, bg="black")
 canvas_main.pack(fill="both", expand=True)
 
-""" Creating the leaderboard frame """
-leaderboard_frame = Frame(canvas_main, width=window_width, height=window_height, bg="black")
+""" Creating a leaderboard with a scrollbar """
+# There is a outer frame to contain a canvas which will contain another frame
+leaderboard_frame_outer = Frame(canvas_main)
+
+""" Score display after game over """
+Game_over_score = canvas_main.create_text(window_width / 2, window_height / 4, fill="white",
+                                          font=("OCR A Extended", 60), text="Score: " + str(score))
+canvas_main.itemconfig(Game_over_score, state="hidden")
 
 """Adding Background to the main game"""
 color = ["white", "#fefefe", "#dfdfdf", "#ad7f00", "#828181"]
@@ -389,6 +415,7 @@ Level = canvas_main.create_text(window_width / 2, window_height / 10, fill="whit
                                 text=("      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids"))
 
 canvas_main.itemconfig(Level, state="hidden")
+
 """ Start menu """
 # main menu image
 main_menu_image = ImageTk.PhotoImage(Image.open("images/main.png"))
