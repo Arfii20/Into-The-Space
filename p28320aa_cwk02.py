@@ -7,7 +7,7 @@
 * The difficulty increases at certain scores.
 * The speed of the asteroids will increase making the game harder and harder at each level.
 """
-import pickle
+
 # game_icon.ico source: https://www.freeiconspng.com/img/17270
 # spaceship_image.png source: https://www.pngkey.com/detail/u2q8a9t4r5y3a9r5_spaceship-png-file-spaceship-png/
 # asteroid_1.png source: https://www.pngwing.com/en/free-png-yoygi
@@ -77,6 +77,10 @@ def unbind_keys():
     canvas_main.unbind("<Right>")
     canvas_main.unbind("<Up>")
     canvas_main.unbind("<Down>")
+    canvas_main.unbind("<Shift-Z>")
+    canvas_main.unbind("<Shift-X>")
+    canvas_main.unbind("<Shift-C>")
+    canvas_main.unbind("<Shift-V>")
 
 
 def bind_keys():
@@ -87,6 +91,10 @@ def bind_keys():
     canvas_main.bind("<Right>", move_spaceship_right)
     canvas_main.bind("<Up>", move_spaceship_up)
     canvas_main.bind("<Down>", move_spaceship_down)
+    canvas_main.bind("<Shift-Z>", cheatZ_reduce_speed_default)
+    canvas_main.bind("<Shift-X>", cheatX_reduce_speed_by_one)
+    canvas_main.bind("<Shift-C>", cheatC_increase_score)
+    canvas_main.bind("<Shift-V>", cheatV_invulnerability)
 
 
 # Creating keybindings to move the spaceship
@@ -119,11 +127,89 @@ def move_spaceship_down(_):
     canvas_main.move(spaceship, 0, 15)
 
 
+def spaceship_touches_sides():
+    """
+    This function unbinds movement of the spaceship if it touches the sides.
+    When the player tries to go other direction, it binds the keys again.
+    """
+    # Unbinds if touches
+    if spaceship_pos[0] > window_width - 100:
+        canvas_main.unbind("<Right>")
+    if spaceship_pos[0] < 0:
+        canvas_main.unbind("<Left>")
+    if spaceship_pos[1] > window_height - 100:
+        canvas_main.unbind("<Down>")
+    if spaceship_pos[1] < 0:
+        canvas_main.unbind("<Up>")
+
+    # Binds if goes other direction
+    if spaceship_pos[0] < window_width - 100:
+        canvas_main.bind("<Right>", move_spaceship_right)
+    if spaceship_pos[0] > 0:
+        canvas_main.bind("<Left>", move_spaceship_left)
+    if spaceship_pos[1] < window_height - 100:
+        canvas_main.bind("<Down>", move_spaceship_down)
+    if spaceship_pos[1] < 0:
+        canvas_main.bind("<Up>", move_spaceship_up)
+
+
+def cheatZ_reduce_speed_default(_):
+    """
+    When pressed Shift+Z the speed is set to 4
+    """
+    global asteroid_speed
+    asteroid_speed = 4
+    canvas_main.itemconfig(cheat, state="normal", text="Spead set to default")
+
+
+def cheatX_reduce_speed_by_one(_):
+    """
+     When pressed Shift+X the speed is reduced by 1
+     """
+    global asteroid_speed
+    if asteroid_speed > 4:
+        asteroid_speed -= 1
+    canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
+
+
+def cheatC_increase_score(_):
+    """
+     When pressed Shift+C the score will increase by 500
+     """
+    global score
+    score += 500
+    canvas_main.itemconfig(cheat, state="normal", text="Score increased by 500")
+
+
+def cheatV_invulnerability(_):
+    """
+    When pressed Shift+V the collision detection will be turned off and on
+    """
+    global invulnerable
+    if not invulnerable:
+        invulnerable = True
+        canvas_main.itemconfig(cheat, state="normal", text="Invulnerability On")
+
+    elif invulnerable:
+        invulnerable = False
+        canvas_main.itemconfig(cheat, state="normal", text="Invulnerability Off")
+
+
 def boss_key(_):
     """
     When tab is clicked, it opens the boss.css file.
+    It also pauses the game and shows all the buttons.
     """
+    global pause_game
     opn("boss.css")
+
+    pause_game = True
+    normal_buttons()
+    canvas_main.itemconfig(resume, state="normal")
+    canvas_main.itemconfig(restarted, state="normal")
+    canvas_main.itemconfig(save, state="normal")
+    canvas_main.itemconfig(level, state="hidden")
+    canvas_main.itemconfig(cheat, state="hidden")
 
 
 # sets the state of the selected buttons to hidden
@@ -205,7 +291,8 @@ def pause_menu(_):
         canvas_main.itemconfig(resume, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
         canvas_main.itemconfig(save, state="normal")
-        canvas_main.itemconfig(Level, state="hidden")
+        canvas_main.itemconfig(level, state="hidden")
+        canvas_main.itemconfig(cheat, state="hidden")
         normal_buttons()
 
         unbind_keys()
@@ -217,7 +304,7 @@ def pause_menu(_):
         canvas_main.itemconfig(restarted, state="hidden")
         canvas_main.itemconfig(save, state="hidden")
         canvas_main.itemconfig(main_image, state="hidden")
-        canvas_main.itemconfig(Level, state="normal")
+        canvas_main.itemconfig(level, state="normal")
         hidden_buttons()
         bind_keys()
 
@@ -246,10 +333,11 @@ def restart_game():
     When restart button is clicked, this function clears all the items and
     launches the main game function which starts the game from beginning.
     """
-    global restart_flag, pause_game, score
+    global restart_flag, pause_game, score, asteroid_speed, level_number
     pause_game = False
     restart_flag = True
     asteroid_speed = 4
+    level_number = 1
     score = 0
 
     if score != 0:
@@ -261,7 +349,7 @@ def restart_game():
     canvas_main.itemconfig(restarted, state="hidden")
     canvas_main.itemconfig(Game_over_score, state="hidden")
     canvas_main.itemconfig(save, state="hidden")
-    canvas_main.itemconfig(Level, text="      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids")
+    canvas_main.itemconfig(level, text="      Level " + str(level_number) + "\n\nDodge the Asteroids")
     canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
     for j in asteroid:
         canvas_main.delete(j)
@@ -373,9 +461,9 @@ def asteroid_falling_collision():
     Keeps the asteroid falling loop running till the game is over.
     The collision detection and finds when game over.
     """
-    global game_over_text, pause_game, game_over, score, asteroid_speed, spaceship_pos
+    global game_over_text, pause_game, game_over, score, \
+        asteroid_speed, spaceship_pos, level_number, invulnerable
 
-    canvas_main.itemconfig(Level, )
 
     while not pause_game:
         y = [asteroid_speed] * 4
@@ -388,35 +476,42 @@ def asteroid_falling_collision():
                 canvas_main.itemconfig(scoreText, text=score_txt)
                 if score != 0 and score % 100 == 0:
                     asteroid_speed += 1
-                    canvas_main.itemconfig(Level, state="normal",
-                                           text=("Level " + str(asteroid_speed - 3) + ": Speed increased"))
+                    level_number += 1
+                    canvas_main.itemconfig(level, state="normal",
+                                           text=("Level " + str(level_number) + ": Speed increased"))
+                    canvas_main.itemconfig(cheat, state="hidden")
                 elif (score - 40) % 100 == 0:
-                    canvas_main.itemconfig(Level, state="hidden")
+                    canvas_main.itemconfig(level, state="hidden")
+                    canvas_main.itemconfig(cheat, state="hidden")
 
             asteroid_pos = canvas_main.coords(asteroid[i])
             spaceship_pos = canvas_main.coords(spaceship)
 
-            # Collision detection
-            game_over = 110 > sqrt(pow(asteroid_pos[0] - spaceship_pos[0], 2)
-                                   + pow(asteroid_pos[1] - spaceship_pos[1], 2))
+            spaceship_touches_sides()
 
-            # Game over
-            if game_over:
-                unbind_keys()
-                canvas_main.unbind("<Escape>")
-                game_over_text = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
-                                                         font=("OCR A Extended", 120), text="Game Over")
-                canvas_main.itemconfig(Level, state="hidden")
-                canvas_main.itemconfig(scoreText, state="hidden")
-                canvas_main.coords(load, window_width / 2, window_height / 2 - 100)
+            if not invulnerable:
+                # Collision detection
+                game_over = 110 > sqrt(pow(asteroid_pos[0] - spaceship_pos[0], 2)
+                                       + pow(asteroid_pos[1] - spaceship_pos[1], 2))
 
-                if score != 0:
-                    file = open("leaderboard.txt", "a")
-                    file.write("\n" + str(score))
-                    file.close()
+                # Game over
+                if game_over:
+                    unbind_keys()
+                    canvas_main.unbind("<Escape>")
+                    game_over_text = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
+                                                             font=("OCR A Extended", 120), text="Game Over")
+                    canvas_main.itemconfig(level, state="hidden")
+                    canvas_main.itemconfig(cheat, state="hidden")
+                    canvas_main.itemconfig(scoreText, state="hidden")
+                    canvas_main.coords(load, window_width / 2, window_height / 2 - 100)
 
-                canvas_main.after(1000, game_over_buttons)
-                break
+                    if score != 0:
+                        file = open("leaderboard.txt", "a")
+                        file.write("\n" + str(score))
+                        file.close()
+
+                    canvas_main.after(1000, game_over_buttons)
+                    break
             canvas_main.move(asteroid[i], 0, y[i])
         if not game_over:
             sleep(0.0001)
@@ -438,7 +533,7 @@ def main_game():
 
     # Display only if the game starts from 0
     if score == 0:
-        canvas_main.itemconfig(Level, text=("      Level " + str(asteroid_speed - 3) + "\n\nDodge the Asteroids"))
+        canvas_main.itemconfig(level, text=("      Level " + str(level_number) + "\n\nDodge the Asteroids"))
 
     # Hides the main menu buttons
     canvas_main.itemconfig(main_image, state="hidden")
@@ -457,6 +552,9 @@ def main_game():
     """ Keybindings """
     bind_keys()
     canvas_main.bind("<Escape>", pause_menu)
+
+    # Boss Key TAB
+    canvas_main.bind("<Tab>", boss_key)
     canvas_main.focus_set()
 
     """ Making the scoring system """
@@ -477,7 +575,7 @@ def main_game():
         asteroid.append(canvas_main.create_image(asteroid_x, asteroid_y,
                                                  image=asteroid_image[asteroid_select],
                                                  anchor="nw"))
-    canvas_main.itemconfig(Level, state="normal")
+    canvas_main.itemconfig(level, state="normal")
     asteroid_falling_collision()
 
 
@@ -486,10 +584,11 @@ def save_game():
     Saves the score, speed and spaceship position for the player to load later.
     Unfortunately this does not save the asteroid positions
     """
-    global score, asteroid_speed, spaceship_pos
+    global score, asteroid_speed, spaceship_pos, level_number
 
     dmp(score, open("save/score.bat", "wb"))
     dmp(asteroid_speed, open("save/asteroid_speed.bat", "wb"))
+    dmp(level_number, open("save/level.bat", "wb"))
     dmp(spaceship_pos, open("save/spaceship_pos.bat", "wb"))
 
 
@@ -499,10 +598,11 @@ def load_game():
     It loads everything apart from the asteroids from last session.
     The asteroids are newly formed after this load.
     """
-    global score, asteroid_speed, restart_flag, pause_game, game_over
+    global score, asteroid_speed, restart_flag, pause_game, game_over, level_number
 
     score = ld(open("save/score.bat", "rb"))
     asteroid_speed = ld(open("save/asteroid_speed.bat", "rb"))
+    level_number = ld(open("save/level.bat", "rb"))
 
     ship_pos = ld(open("save/spaceship_pos.bat", "rb"))
     canvas_main.coords(spaceship, ship_pos[0], ship_pos[1])
@@ -531,8 +631,10 @@ configure_window()
 pause_game = False
 restart_flag = False
 game_over = False
+invulnerable = False
 score = 0
 asteroid_speed = 4
+level_number = 1
 
 """ Creating the Canvas """
 canvas_main = Canvas(window, width=window_width, height=window_height, bg="black")
@@ -547,9 +649,6 @@ Game_over_score = canvas_main.create_text(window_width / 2, window_height / 4, f
                                           font=("OCR A Extended", 60))
 canvas_main.itemconfig(Game_over_score, state="hidden")
 
-""" Boss Key """
-canvas_main.bind("<Tab>", boss_key)
-
 """Adding Background to the main game"""
 color = ["white", "#fefefe", "#dfdfdf", "#ad7f00", "#828181"]
 
@@ -563,10 +662,10 @@ for _ in range(300):
 
     canvas_main.create_oval(bg_x, bg_y, bg_x + size, bg_y + size, fill=color[color_chooser])
 
-# Level text that will be shown upon each level
-Level = canvas_main.create_text(window_width / 2, window_height / 10, fill="white", font=("OCR A Extended", 25))
+# level_number text that will be shown upon each level
+level = canvas_main.create_text(window_width / 2, window_height / 10, fill="white", font=("OCR A Extended", 25))
 
-canvas_main.itemconfig(Level, state="hidden")
+canvas_main.itemconfig(level, state="hidden")
 
 """ Start menu """
 # main menu image
@@ -583,6 +682,23 @@ welcome_text = canvas_main.create_text(window_width / 2, window_height / 2 - 30,
 press_any_key = canvas_main.create_text(window_width / 2, window_height / 2 + 30,
                                         fill="white", font=("OCR A Extended", 25),
                                         text="Please press enter to continue")
+
+""" Cheats Message """
+cheat = canvas_main.create_text(window_width / 2, window_height / 7, fill="white",
+                                 font=("OCR A Extended", 20), text="")
+canvas_main.itemconfig(cheat, state="hidden")
+
+# cheatX = canvas_main.create_text(window_width / 2, window_height / 12, fill="white",
+#                                  font=("OCR A Extended", 20))
+# canvas_main.itemconfig(cheatZ, state="hidden")
+#
+# cheat = canvas_main.create_text(window_width / 2, window_height / 12, fill="white",
+#                                  font=("OCR A Extended", 20))
+# canvas_main.itemconfig(cheatZ, state="hidden")
+#
+# cheatZ = canvas_main.create_text(window_width / 2, window_height / 12, fill="white",
+#                                  font=("OCR A Extended", 20))
+# canvas_main.itemconfig(cheatZ, state="hidden")
 
 """ Start button """
 start_org = Image.open("images/start.png")
