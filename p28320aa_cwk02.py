@@ -8,6 +8,8 @@
 * The speed of the asteroids will increase making the game harder and harder at each level.
 """
 
+# Image sources
+
 # game_icon.ico source: https://www.freeiconspng.com/img/17270
 # spaceship_image.png source: https://www.pngkey.com/detail/u2q8a9t4r5y3a9r5_spaceship-png-file-spaceship-png/
 # asteroid_1.png source: https://www.pngwing.com/en/free-png-yoygi
@@ -153,10 +155,6 @@ def spaceship_touches_sides():
         canvas_main.bind("<Up>", move_spaceship_up)
 
 
-def cheat_codes():
-    pass
-
-
 def cheatz_reduce_speed_default(_):
     """
     When pressed Shift+Z the speed is set to 4
@@ -164,6 +162,7 @@ def cheatz_reduce_speed_default(_):
     global asteroid_speed
     asteroid_speed = 4
     canvas_main.itemconfig(cheat, state="normal", text="Spead set to default")
+    canvas_main.tag_raise(cheat)
 
 
 def cheatx_reduce_speed_by_one(_):
@@ -174,6 +173,7 @@ def cheatx_reduce_speed_by_one(_):
     if asteroid_speed > 4:
         asteroid_speed -= 1
     canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
+    canvas_main.tag_raise(cheat)
 
 
 def cheatc_increase_score(_):
@@ -183,6 +183,7 @@ def cheatc_increase_score(_):
     global score
     score += 500
     canvas_main.itemconfig(cheat, state="normal", text="Score increased by 500")
+    canvas_main.tag_raise(cheat)
 
 
 def cheatv_invulnerability(_):
@@ -193,10 +194,11 @@ def cheatv_invulnerability(_):
     if not invulnerable:
         invulnerable = True
         canvas_main.itemconfig(cheat, state="normal", text="Invulnerability On")
-
+        canvas_main.tag_raise(cheat)
     elif invulnerable:
         invulnerable = False
         canvas_main.itemconfig(cheat, state="normal", text="Invulnerability Off")
+        canvas_main.tag_raise(cheat)
 
 
 def boss_key(_):
@@ -348,51 +350,12 @@ def restart_game():
     canvas_main.itemconfig(restarted, state="hidden")
     canvas_main.itemconfig(game_over_score, state="hidden")
     canvas_main.itemconfig(save, state="hidden")
-    canvas_main.itemconfig(level, text="      Level " + str(level_number) + "\n\n\n\nDodge the Asteroids")
+    canvas_main.itemconfig(level, text="      Level " + str(level_number) + "\n\nDodge the Asteroids")
     canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
     for j in asteroid:
         canvas_main.delete(j)
     hidden_buttons()
     main_game()
-
-
-def options_button_click():
-    # Packing the outer leaderboard frame
-    secondary_frame.pack(fill="both", expand=1)
-
-    # Creating a canvas for the leaderboard
-    canvas_options = Canvas(secondary_frame, bg="black", border=0)
-    canvas_options.pack(side="left", fill="both", expand=1)
-
-    # Adding 300 starts to reduce lag
-    for _ in range(300):
-        optionsbg_x = randint(0, window_width)
-        optionsbg_y = randint(0, window_height)
-
-        options_size = randint(1, 5)
-        options_color_chooser = randint(0, 4)
-
-        canvas_options.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
-                                   fill=color[options_color_chooser])
-
-    # Hides the main menu buttons
-    canvas_main.itemconfig(main_image, state="hidden")
-    canvas_main.itemconfig(start, state="hidden")
-    canvas_main.itemconfig(load, state="hidden")
-    canvas_main.itemconfig(resume, state="hidden")
-    canvas_main.itemconfig(save, state="hidden")
-    canvas_main.itemconfig(restarted, state="hidden")
-    hidden_buttons()
-
-    canvas_main.itemconfig(cheats, state="normal")
-    canvas_main.itemconfig(helps, state="normal")
-
-    exit_options = Button(canvas_options, image=back_image, bg="black", border=0, command=back_clear)
-    exit_options.place(x=window_width / 2 - 100, y=window_height - window_height / 7)
-
-
-def help_player():
-    pass
 
 
 def leaderboard():
@@ -463,9 +426,74 @@ def leaderboard():
                 count += 1
     file.close()
 
-    exit_leaderboard = Button(canvas_leaderboard, image=back_image, bg="black", border=0, command=back_clear)
-    exit_leaderboard.place(x=window_width / 2 - 100, y=window_height - window_height / 7)
+    canvas_main.itemconfig(backs, state="normal")
 
+
+def options_button_click():
+    global canvas_options
+    # Packing the outer leaderboard frame
+    secondary_frame.pack(fill="both", expand=1)
+
+    # Creating a canvas for the leaderboard
+    canvas_options = Canvas(secondary_frame, bg="black", border=0)
+    canvas_options.pack(side="left", fill="both", expand=1)
+
+    # Adding 300 starts to reduce lag
+    for _ in range(300):
+        optionsbg_x = randint(0, window_width)
+        optionsbg_y = randint(0, window_height)
+
+        options_size = randint(1, 5)
+        options_color_chooser = randint(0, 4)
+
+        canvas_options.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
+                                   fill=color[options_color_chooser])
+
+    # Hides the main menu buttons
+    canvas_main.itemconfig(main_image, state="hidden")
+    canvas_main.itemconfig(start, state="hidden")
+    canvas_main.itemconfig(load, state="hidden")
+    canvas_main.itemconfig(resume, state="hidden")
+    canvas_main.itemconfig(save, state="hidden")
+    canvas_main.itemconfig(restarted, state="hidden")
+    hidden_buttons()
+
+    canvas_main.itemconfig(cheats, state="normal")
+    canvas_main.itemconfig(helps, state="normal")
+    canvas_main.itemconfig(backs, state="normal")
+
+
+def cheat_codes():
+    """ Cheat Codes """
+    global cheat_code
+    cheat_code_text = "Reset asteroid speed to default:\nShift + z \n\n" \
+                      "Reduce asteroid speed by 1:\nShift + x \n\n" \
+                      "Increase score by 500:\nShift + c \n\n" \
+                      "God Mode (Invulnerability):\nShift + v"
+
+    cheat_code = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
+                                         font=("OCR A Extended", 25), text=cheat_code_text, justify="center")
+
+    canvas_main.itemconfig(cheats, state="hidden")
+    canvas_main.itemconfig(helps, state="hidden")
+    canvas_main.itemconfig(backs, state="hidden")
+
+    canvas_main.itemconfig(back1s, state="normal")
+    canvas_main.itemconfig(cheat_code, state="normal")
+    canvas_main.tag_raise(cheat_code)
+
+
+def help_player():
+    pass
+
+
+def back_clear_to_options():
+    canvas_main.itemconfig(cheats, state="normal")
+    canvas_main.itemconfig(helps, state="normal")
+    canvas_main.itemconfig(backs, state="normal")
+
+    canvas_main.itemconfig(back1s, state="hidden")
+    canvas_options.delete(cheat_code)
 
 def back_clear():
     """
@@ -477,6 +505,7 @@ def back_clear():
         widget.destroy()
     canvas_main.itemconfig(cheats, state="hidden")
     canvas_main.itemconfig(helps, state="hidden")
+    canvas_main.itemconfig(backs, state="hidden")
     secondary_frame.pack_forget()
     if pause_game:
         canvas_main.itemconfig(resume, state="normal")
@@ -567,7 +596,7 @@ def main_game():
 
     # Display only if the game starts from 0
     if score == 0:
-        canvas_main.itemconfig(level, text=("      Level " + str(level_number) + "\n\n\n\nDodge the Asteroids"))
+        canvas_main.itemconfig(level, text=("      Level " + str(level_number) + "\n\nDodge the Asteroids"))
 
     # Hides the main menu buttons
     canvas_main.itemconfig(main_image, state="hidden")
@@ -683,6 +712,11 @@ game_over_score = canvas_main.create_text(window_width / 2, window_height / 5, f
                                           font=("OCR A Extended", 60))
 canvas_main.itemconfig(game_over_score, state="hidden")
 
+""" Cheats Message """
+cheat = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
+                                font=("OCR A Extended", 20))
+canvas_main.itemconfig(cheat, state="hidden")
+
 """Adding Background to the main game"""
 # Color palette
 color = ["white", "#fefefe", "#dfdfdf", "#ad7f00", "#828181"]
@@ -699,7 +733,6 @@ for _ in range(300):
 
 # level_number text that will be shown upon each level
 level = canvas_main.create_text(window_width / 2, window_height / 7, fill="white", font=("OCR A Extended", 25))
-
 canvas_main.itemconfig(level, state="hidden")
 
 """ Start menu """
@@ -718,10 +751,11 @@ press_any_key = canvas_main.create_text(window_width / 2, window_height / 2 + 30
                                         fill="white", font=("OCR A Extended", 25),
                                         text="Please press enter to continue")
 
-""" Cheats Message """
-cheat = canvas_main.create_text(window_width / 2, window_height / 7, fill="white",
-                                font=("OCR A Extended", 20))
-canvas_main.itemconfig(cheat, state="hidden")
+"""
+The next sections are about loading, resizing and storing images to variables.
+Using the images, buttons are created and set the state to hidden to use later.
+Position of the buttons are fixed using the coords function
+"""
 
 """ Start button """
 start_org = Image.open("images/start.png")
@@ -797,7 +831,7 @@ load_coords = canvas_main.coords(load)
 
 """ cheat button """
 cheat_org = Image.open("images/cheat.png")
-cheat_resized = cheat_org.resize((204, 80), Image.Resampling.LANCZOS)
+cheat_resized = cheat_org.resize((204, 75), Image.Resampling.LANCZOS)
 cheat_image = ImageTk.PhotoImage(cheat_resized)
 cheat_button = Button(window, image=cheat_image, border=0, bg="black", command=cheat_codes)
 cheats = canvas_main.create_window(window_width / 2, window_height / 2 - 50, window=cheat_button)
@@ -815,8 +849,19 @@ help_coords = canvas_main.coords(helps)
 
 """ back button """
 back_org = Image.open("images/back.png")
-back_resized = back_org.resize((204, 80), Image.Resampling.LANCZOS)
+back_resized = back_org.resize((204, 75), Image.Resampling.LANCZOS)
 back_image = ImageTk.PhotoImage(back_resized)
+back_button = Button(window, image=back_image, border=0, bg="black", command=back_clear)
+backs = canvas_main.create_window(window_width / 2, window_height - window_height / 7, window=back_button)
+canvas_main.itemconfig(backs, state="hidden")
+
+""" back1 button """
+back1_org = Image.open("images/back.png")
+back1_resized = back1_org.resize((204, 75), Image.Resampling.LANCZOS)
+back1_image = ImageTk.PhotoImage(back1_resized)
+back1_button = Button(window, image=back1_image, border=0, bg="black", command=back_clear_to_options)
+back1s = canvas_main.create_window(window_width / 2, window_height - window_height / 7, window=back1_button)
+canvas_main.itemconfig(back1s, state="hidden")
 
 """ Spaceship """
 spaceship_org = Image.open("images/spaceship_image.png")
