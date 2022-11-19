@@ -379,6 +379,16 @@ def leaderboard():
     canvas_leaderboard.bind("<Configure>",
                             lambda e: canvas_leaderboard.configure(scrollregion=canvas_leaderboard.bbox("all")))
 
+    for _ in range(300):
+        optionsbg_x = randint(0, window_width)
+        optionsbg_y = randint(0, window_height)
+
+        options_size = randint(1, 5)
+        options_color_chooser = randint(0, 4)
+
+        canvas_leaderboard.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
+                                   fill=color[options_color_chooser])
+
     # Creating the main leaderboard frame
     leaderboard_frame = Frame(canvas_leaderboard, width=window_width, height=window_height, bg="black", border=0)
     canvas_leaderboard.create_window((0, 0), window=leaderboard_frame, anchor="nw")
@@ -393,7 +403,7 @@ def leaderboard():
     hidden_buttons()
 
     Label(leaderboard_frame, text="Leaderboard:\n", font=("OCR A Extended", 35),
-          bg="black", fg="white").pack(anchor="w", padx=50, pady=(40, 0))
+          bg="black", fg="white").pack(padx=50, pady=(40, 0))
 
     unsorted = open("leaderboard.txt", "r")
     words = unsorted.readlines()
@@ -465,26 +475,41 @@ def options_button_click():
 
 def cheat_codes():
     """ Cheat Codes """
-    global cheat_code
-    cheat_code_text = "Reset asteroid speed to default:\nShift + z \n\n" \
-                      "Reduce asteroid speed by 1:\nShift + x \n\n" \
-                      "Increase score by 500:\nShift + c \n\n" \
-                      "God Mode (Invulnerability):\nShift + v"
+    global options_text
+    explanation = "Reset asteroid speed to default:\nShift + z \n\n" \
+                  "Reduce asteroid speed by 1:\nShift + x \n\n" \
+                  "Increase score by 500:\nShift + c \n\n" \
+                  "God Mode (Invulnerability):\nShift + v\n\n\n" \
+                  "BOSS KEY: <TAB>"
 
-    cheat_code = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
-                                         font=("OCR A Extended", 25), text=cheat_code_text, justify="center")
+    options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
+                                              font=("OCR A Extended", 25), text=explanation, justify="center")
 
     canvas_main.itemconfig(cheats, state="hidden")
     canvas_main.itemconfig(helps, state="hidden")
     canvas_main.itemconfig(backs, state="hidden")
 
     canvas_main.itemconfig(back1s, state="normal")
-    canvas_main.itemconfig(cheat_code, state="normal")
-    canvas_main.tag_raise(cheat_code)
 
 
 def help_player():
-    pass
+    """ Cheat Codes """
+    global options_text
+    explanation = "The player has to avoid the asteroids to earn score and survive\n\n" \
+                  "The speed and level will increase every 100 scores\n\n" \
+                  "Speed will keep on increasing till game over\n\n" \
+                  "The game is over if the player crashes into any asteroid\n\n" \
+                  "The player can use cheats if he wants to but is discouraged\n\n\n" \
+                  "BOSS KEY: <TAB>"
+
+    options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
+                                              font=("OCR A Extended", 25), text=explanation, justify="center")
+
+    canvas_main.itemconfig(cheats, state="hidden")
+    canvas_main.itemconfig(helps, state="hidden")
+    canvas_main.itemconfig(backs, state="hidden")
+
+    canvas_main.itemconfig(back1s, state="normal")
 
 
 def back_clear_to_options():
@@ -493,7 +518,8 @@ def back_clear_to_options():
     canvas_main.itemconfig(backs, state="normal")
 
     canvas_main.itemconfig(back1s, state="hidden")
-    canvas_options.delete(cheat_code)
+    canvas_options.delete(options_text)
+
 
 def back_clear():
     """
@@ -703,9 +729,9 @@ level_number = 1
 canvas_main = Canvas(window, width=window_width, height=window_height, bg="black")
 canvas_main.pack(fill="both", expand=True)
 
-""" Creating a leaderboard with a scrollbar """
+""" Creating a leaderboard frame """
 # There is an outer frame to contain a canvas which will contain another frame
-secondary_frame = Frame(canvas_main)
+secondary_frame = Frame(canvas_main, border=0)
 
 """ Score display after game over """
 game_over_score = canvas_main.create_text(window_width / 2, window_height / 5, fill="white",
