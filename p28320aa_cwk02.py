@@ -27,6 +27,8 @@
 # back.png source: http://pixelartmaker.com/art/fe696dcfb337a49
 # load.png source: http://pixelartmaker.com/art/84432c853ed5006
 # save.png source: http://pixelartmaker.com/art/154309787c95a2f
+# cheat.png source: http://pixelartmaker.com/art/184effceebac6a0
+# help.png source: http://pixelartmaker.com/art/e423fd17591bcaa
 
 from tkinter import Tk, Canvas, Button, Label, Frame, ttk
 from tkinter.font import Font
@@ -151,6 +153,10 @@ def spaceship_touches_sides():
         canvas_main.bind("<Down>", move_spaceship_down)
     if spaceship_pos[1] < 0:
         canvas_main.bind("<Up>", move_spaceship_up)
+
+
+def cheat_codes():
+    pass
 
 
 def cheatZ_reduce_speed_default(_):
@@ -358,6 +364,40 @@ def restart_game():
 
 
 def options_button_click():
+    # Packing the outer leaderboard frame
+    leaderboard_frame_outer.pack(fill="both", expand=1)
+
+    # Creating a canvas for the leaderboard
+    canvas_options = Canvas(leaderboard_frame_outer, bg="black", border=0)
+    canvas_options.pack(side="left", fill="both", expand=1)
+
+    # Adding 300 starts to reduce lag
+    for _ in range(300):
+        bg_x = randint(0, window_width)
+        bg_y = randint(0, window_height)
+
+        size = randint(1, 5)
+        color_chooser = randint(0, 4)
+
+        canvas_options.create_oval(bg_x, bg_y, bg_x + size, bg_y + size, fill=color[color_chooser])
+
+    # Hides the main menu buttons
+    canvas_main.itemconfig(main_image, state="hidden")
+    canvas_main.itemconfig(start, state="hidden")
+    canvas_main.itemconfig(load, state="hidden")
+    canvas_main.itemconfig(resume, state="hidden")
+    canvas_main.itemconfig(save, state="hidden")
+    canvas_main.itemconfig(restarted, state="hidden")
+    hidden_buttons()
+
+    canvas_main.itemconfig(cheat, state="normal")
+    canvas_main.itemconfig(help, state="normal")
+
+    exit_leaderboard = Button(canvas_options, image=back_image, bg="black", border=0, command=leaderboard_clear)
+    exit_leaderboard.place(x=window_width / 2 - 100, y=window_height - window_height / 7)
+
+
+def help_player():
     pass
 
 
@@ -441,6 +481,8 @@ def leaderboard_clear():
     global leaderboard_frame_outer
     for widget in leaderboard_frame_outer.winfo_children():
         widget.destroy()
+    canvas_main.itemconfig(cheat, state="hidden")
+    canvas_main.itemconfig(help, state="hidden")
     leaderboard_frame_outer.pack_forget()
     if pause_game:
         canvas_main.itemconfig(resume, state="normal")
@@ -448,7 +490,7 @@ def leaderboard_clear():
         canvas_main.itemconfig(restarted, state="normal")
     elif game_over:
         game_over_buttons()
-        canvas_main.coords(load, window_width / 2, window_height / 2 - 100)
+        canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
     else:
         canvas_main.itemconfig(start, state="normal")
         canvas_main.itemconfig(load, state="normal")
@@ -645,7 +687,7 @@ canvas_main.pack(fill="both", expand=True)
 leaderboard_frame_outer = Frame(canvas_main)
 
 """ Score display after game over """
-Game_over_score = canvas_main.create_text(window_width / 2, window_height / 4, fill="white",
+Game_over_score = canvas_main.create_text(window_width / 2, window_height / 5, fill="white",
                                           font=("OCR A Extended", 60))
 canvas_main.itemconfig(Game_over_score, state="hidden")
 
@@ -687,18 +729,6 @@ press_any_key = canvas_main.create_text(window_width / 2, window_height / 2 + 30
 cheat = canvas_main.create_text(window_width / 2, window_height / 7, fill="white",
                                  font=("OCR A Extended", 20), text="")
 canvas_main.itemconfig(cheat, state="hidden")
-
-# cheatX = canvas_main.create_text(window_width / 2, window_height / 12, fill="white",
-#                                  font=("OCR A Extended", 20))
-# canvas_main.itemconfig(cheatZ, state="hidden")
-#
-# cheat = canvas_main.create_text(window_width / 2, window_height / 12, fill="white",
-#                                  font=("OCR A Extended", 20))
-# canvas_main.itemconfig(cheatZ, state="hidden")
-#
-# cheatZ = canvas_main.create_text(window_width / 2, window_height / 12, fill="white",
-#                                  font=("OCR A Extended", 20))
-# canvas_main.itemconfig(cheatZ, state="hidden")
 
 """ Start button """
 start_org = Image.open("images/start.png")
@@ -771,6 +801,24 @@ load_button = Button(window, image=load_image, border=0, bg="black", command=loa
 load = canvas_main.create_window(window_width / 2, window_height / 2 - 100, window=load_button)
 canvas_main.itemconfig(load, state="hidden")
 load_coords = canvas_main.coords(load)
+
+""" cheat button """
+cheat_org = Image.open("images/cheat.png")
+cheat_resized = cheat_org.resize((204, 80), Image.Resampling.LANCZOS)
+cheat_image = ImageTk.PhotoImage(cheat_resized)
+cheat_button = Button(window, image=cheat_image, border=0, bg="black", command=cheat_codes)
+cheat = canvas_main.create_window(window_width / 2, window_height / 2 - 50, window=cheat_button)
+canvas_main.itemconfig(cheat, state="hidden")
+cheat_coords = canvas_main.coords(cheat)
+
+""" help button """
+help_org = Image.open("images/help.png")
+help_resized = help_org.resize((204, 80), Image.Resampling.LANCZOS)
+help_image = ImageTk.PhotoImage(help_resized)
+help_button = Button(window, image=help_image, border=0, bg="black", command=help_player)
+help = canvas_main.create_window(window_width / 2, window_height / 2 + 50, window=help_button)
+canvas_main.itemconfig(help, state="hidden")
+help_coords = canvas_main.coords(help)
 
 """ back button """
 back_org = Image.open("images/back.png")
