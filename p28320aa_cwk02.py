@@ -144,7 +144,7 @@ def spaceship_touches_sides():
     if spaceship_pos[1] < 0:
         canvas_main.unbind("<Up>")
 
-    # Binds if goes other direction
+    # Binds if it goes other direction
     if spaceship_pos[0] < window_width - 100:
         canvas_main.bind("<Right>", move_spaceship_right)
     if spaceship_pos[0] > 0:
@@ -249,7 +249,7 @@ def shift_buttons(y):
 
 def game_over_buttons():
     """
-    When the game is over, this function is called and it displays all the buttons again.
+    When the game is over, this function is called, and it displays all the buttons again.
     """
     normal_buttons()
     canvas_main.itemconfig(game_over_score, state="normal", text="Score: " + str(score))
@@ -323,6 +323,7 @@ def resume_button_click():
     canvas_main.itemconfig(restarted, state="hidden")
     canvas_main.itemconfig(save, state="hidden")
     canvas_main.itemconfig(main_image, state="hidden")
+    canvas_main.itemconfig(game_saved, state="hidden")
     hidden_buttons()
     bind_keys()
     pause_game = False
@@ -349,6 +350,7 @@ def restart_game():
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
     canvas_main.itemconfig(game_over_score, state="hidden")
+    canvas_main.itemconfig(game_saved, state="hidden")
     canvas_main.itemconfig(save, state="hidden")
     canvas_main.itemconfig(level, text="      Level " + str(level_number) + "\n\nDodge the Asteroids")
     canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
@@ -387,7 +389,7 @@ def leaderboard():
         options_color_chooser = randint(0, 4)
 
         canvas_leaderboard.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
-                                   fill=color[options_color_chooser])
+                                       fill=color[options_color_chooser])
 
     # Creating the main leaderboard frame
     leaderboard_frame = Frame(canvas_leaderboard, width=window_width, height=window_height, bg="black", border=0)
@@ -400,6 +402,7 @@ def leaderboard():
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(save, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
+    canvas_main.itemconfig(game_saved, state="hidden")
     hidden_buttons()
 
     Label(leaderboard_frame, text="Leaderboard:\n", font=("OCR A Extended", 35),
@@ -461,6 +464,7 @@ def options_button_click():
 
     # Hides the main menu buttons
     canvas_main.itemconfig(main_image, state="hidden")
+    canvas_main.itemconfig(game_saved, state="hidden")
     canvas_main.itemconfig(start, state="hidden")
     canvas_main.itemconfig(load, state="hidden")
     canvas_main.itemconfig(resume, state="hidden")
@@ -680,6 +684,8 @@ def save_game():
     dmp(level_number, open("save/level.bat", "wb"))
     dmp(spaceship_pos, open("save/spaceship_pos.bat", "wb"))
 
+    canvas_main.itemconfig(game_saved, state="normal")
+
 
 def load_game():
     """
@@ -721,6 +727,7 @@ pause_game = False
 restart_flag = False
 game_over = False
 invulnerable = False
+spaceship_pos = None
 score = 0
 asteroid_speed = 4
 level_number = 1
@@ -742,6 +749,11 @@ canvas_main.itemconfig(game_over_score, state="hidden")
 cheat = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
                                 font=("OCR A Extended", 20))
 canvas_main.itemconfig(cheat, state="hidden")
+
+""" Game Saved """
+game_saved = canvas_main.create_text(window_width - 100, window_height - 30, fill="white",
+                                font=("OCR A Extended", 20), text="Game Saved")
+canvas_main.itemconfig(game_saved, state="hidden")
 
 """Adding Background to the main game"""
 # Color palette
