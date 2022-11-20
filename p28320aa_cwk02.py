@@ -72,20 +72,6 @@ def configure_window():
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 
-def unbind_keys():
-    """
-    Unbinds the movement keys of the spaceship
-    """
-    canvas_main.unbind("<Left>")
-    canvas_main.unbind("<Right>")
-    canvas_main.unbind("<Up>")
-    canvas_main.unbind("<Down>")
-    canvas_main.unbind("<Shift-Z>")
-    canvas_main.unbind("<Shift-X>")
-    canvas_main.unbind("<Shift-C>")
-    canvas_main.unbind("<Shift-V>")
-
-
 def bind_keys():
     """
     Binds the movement keys of the spaceship
@@ -98,6 +84,20 @@ def bind_keys():
     canvas_main.bind("<Shift-X>", cheatx_reduce_speed_by_one)
     canvas_main.bind("<Shift-C>", cheatc_increase_score)
     canvas_main.bind("<Shift-V>", cheatv_invulnerability)
+
+
+def unbind_keys():
+    """
+    Unbinds the movement keys of the spaceship
+    """
+    canvas_main.unbind("<Left>")
+    canvas_main.unbind("<Right>")
+    canvas_main.unbind("<Up>")
+    canvas_main.unbind("<Down>")
+    canvas_main.unbind("<Shift-Z>")
+    canvas_main.unbind("<Shift-X>")
+    canvas_main.unbind("<Shift-C>")
+    canvas_main.unbind("<Shift-V>")
 
 
 def move_spaceship_left(_):
@@ -151,7 +151,7 @@ def spaceship_touches_sides():
         canvas_main.bind("<Left>", move_spaceship_left)
     if spaceship_pos[1] < window_height - 100:
         canvas_main.bind("<Down>", move_spaceship_down)
-    if spaceship_pos[1] < 0:
+    if spaceship_pos[1] > 0:
         canvas_main.bind("<Up>", move_spaceship_up)
 
 
@@ -206,25 +206,20 @@ def boss_key(_):
     When tab is clicked, it opens the boss.css file.
     It also pauses the game and shows all the buttons.
     """
-    global pause_game
+    global pause_game, game_over
     opn("boss.css")
 
     pause_game = True
     normal_buttons()
-    canvas_main.itemconfig(resume, state="normal")
+    if not game_over:
+        canvas_main.itemconfig(resume, state="normal")
+        canvas_main.coords(save, load_coords[0] + 110, load_coords[1] + 50)
     canvas_main.itemconfig(restarted, state="normal")
     canvas_main.itemconfig(save, state="normal")
     canvas_main.itemconfig(level, state="hidden")
     canvas_main.itemconfig(cheat, state="hidden")
-
-
-def hidden_buttons():
-    """
-    Hides the exit, leaderboard and options buttons
-    """
-    canvas_main.itemconfig(exited, state="hidden")
-    canvas_main.itemconfig(leaderboards, state="hidden")
-    canvas_main.itemconfig(options, state="hidden")
+    canvas_main.itemconfig(load, state="normal")
+    canvas_main.coords(load, load_coords[0] - 110, load_coords[1] + 50)
 
 
 def normal_buttons():
@@ -234,6 +229,15 @@ def normal_buttons():
     canvas_main.itemconfig(options, state="normal")
     canvas_main.itemconfig(exited, state="normal")
     canvas_main.itemconfig(leaderboards, state="normal")
+
+
+def hidden_buttons():
+    """
+    Hides the exit, leaderboard and options buttons
+    """
+    canvas_main.itemconfig(exited, state="hidden")
+    canvas_main.itemconfig(leaderboards, state="hidden")
+    canvas_main.itemconfig(options, state="hidden")
 
 
 def shift_buttons(y):
@@ -292,9 +296,13 @@ def pause_menu(_):
 
         canvas_main.itemconfig(resume, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
-        canvas_main.itemconfig(save, state="normal")
         canvas_main.itemconfig(level, state="hidden")
         canvas_main.itemconfig(cheat, state="hidden")
+        canvas_main.itemconfig(save, state="normal")
+        canvas_main.itemconfig(load, state="normal")
+        canvas_main.coords(save, save_coords[0] + 110, save_coords[1])
+        canvas_main.coords(load, load_coords[0] - 110, load_coords[1] + 50)
+
         normal_buttons()
 
         unbind_keys()
@@ -307,6 +315,8 @@ def pause_menu(_):
         canvas_main.itemconfig(save, state="hidden")
         canvas_main.itemconfig(main_image, state="hidden")
         canvas_main.itemconfig(level, state="normal")
+        canvas_main.itemconfig(load, state="hidden")
+
         hidden_buttons()
         bind_keys()
 
@@ -324,6 +334,8 @@ def resume_button_click():
     canvas_main.itemconfig(save, state="hidden")
     canvas_main.itemconfig(main_image, state="hidden")
     canvas_main.itemconfig(game_saved, state="hidden")
+    canvas_main.itemconfig(load, state="hidden")
+
     hidden_buttons()
     bind_keys()
     pause_game = False
@@ -354,6 +366,8 @@ def restart_game():
     canvas_main.itemconfig(save, state="hidden")
     canvas_main.itemconfig(level, text="      Level " + str(level_number) + "\n\nDodge the Asteroids")
     canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
+
+
     for j in asteroid:
         canvas_main.delete(j)
     hidden_buttons()
@@ -541,6 +555,7 @@ def back_clear():
         canvas_main.itemconfig(resume, state="normal")
         canvas_main.itemconfig(save, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
+        canvas_main.itemconfig(load, state="normal")
     elif game_over:
         game_over_buttons()
         canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
@@ -549,6 +564,73 @@ def back_clear():
         canvas_main.itemconfig(load, state="normal")
     normal_buttons()
     canvas_main.itemconfig(main_image, state="normal")
+
+
+def save_game():
+    """
+    Saves the score, speed and spaceship position for the player to load later.
+    Unfortunately this does not save the asteroid positions
+    """
+    global score, asteroid_speed, spaceship_pos, level_number
+
+    dmp(score, open("save/score.bat", "wb"))
+    dmp(asteroid_speed, open("save/asteroid_speed.bat", "wb"))
+    dmp(level_number, open("save/level.bat", "wb"))
+    dmp(spaceship_pos, open("save/spaceship_pos.bat", "wb"))
+
+    canvas_main.itemconfig(game_saved, state="normal")
+
+
+def load_game():
+    """
+    Loads the game from last saved files and resets the on-screen widgets.
+    It loads everything apart from the asteroids from last session.
+    The asteroids are newly formed after this load.
+    """
+    global score, asteroid_speed, restart_flag, pause_game, game_over, level_number, scoreText, level
+
+    if score != 0:
+        file = open("leaderboard.txt", "a")
+        file.write("\n" + str(score))
+        file.close()
+
+    score = ld(open("save/score.bat", "rb"))
+    asteroid_speed = ld(open("save/asteroid_speed.bat", "rb"))
+    level_number = ld(open("save/level.bat", "rb"))
+
+    ship_pos = ld(open("save/spaceship_pos.bat", "rb"))
+    canvas_main.coords(spaceship, ship_pos[0], ship_pos[1])
+
+    canvas_main.itemconfig(restarted, state="hidden")
+    canvas_main.itemconfig(game_over_score, state="hidden")
+    canvas_main.itemconfig(resume, state="hidden")
+    canvas_main.itemconfig(save, state="hidden")
+    canvas_main.itemconfig(game_saved, state="hidden")
+    canvas_main.itemconfig(load, state="hidden")
+    canvas_main.itemconfig(level, text="")
+
+    if pause_game or game_over:
+        for j in asteroid:
+            canvas_main.delete(j)
+        canvas_main.delete(scoreText)
+
+    pause_game = False
+
+    hidden_buttons()
+    main_game()
+
+    #
+    # canvas_main.itemconfig(resume, state="hidden")
+    # canvas_main.itemconfig(restarted, state="hidden")
+    # canvas_main.itemconfig(game_over_score, state="hidden")
+    # canvas_main.itemconfig(game_saved, state="hidden")
+    # canvas_main.itemconfig(save, state="hidden")
+    # canvas_main.itemconfig(level, text="      Level " + str(level_number) + "\n\nDodge the Asteroids")
+    # canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
+    # for j in asteroid:
+    #     canvas_main.delete(j)
+    # hidden_buttons()
+    # main_game()
 
 
 def asteroids_and_collision():
@@ -672,47 +754,6 @@ def main_game():
     asteroids_and_collision()
 
 
-def save_game():
-    """
-    Saves the score, speed and spaceship position for the player to load later.
-    Unfortunately this does not save the asteroid positions
-    """
-    global score, asteroid_speed, spaceship_pos, level_number
-
-    dmp(score, open("save/score.bat", "wb"))
-    dmp(asteroid_speed, open("save/asteroid_speed.bat", "wb"))
-    dmp(level_number, open("save/level.bat", "wb"))
-    dmp(spaceship_pos, open("save/spaceship_pos.bat", "wb"))
-
-    canvas_main.itemconfig(game_saved, state="normal")
-
-
-def load_game():
-    """
-    Loads the game from last saved files and resets the on-screen widgets.
-    It loads everything apart from the asteroids from last session.
-    The asteroids are newly formed after this load.
-    """
-    global score, asteroid_speed, restart_flag, pause_game, game_over, level_number
-
-    score = ld(open("save/score.bat", "rb"))
-    asteroid_speed = ld(open("save/asteroid_speed.bat", "rb"))
-    level_number = ld(open("save/level.bat", "rb"))
-
-    ship_pos = ld(open("save/spaceship_pos.bat", "rb"))
-    canvas_main.coords(spaceship, ship_pos[0], ship_pos[1])
-
-    canvas_main.itemconfig(load, state="hidden")
-    canvas_main.itemconfig(restarted, state="hidden")
-    canvas_main.itemconfig(game_over_score, state="hidden")
-
-    if game_over:
-        for j in asteroid:
-            canvas_main.delete(j)
-    hidden_buttons()
-    main_game()
-
-
 window = Tk()
 
 """Defining variables"""
@@ -752,7 +793,7 @@ canvas_main.itemconfig(cheat, state="hidden")
 
 """ Game Saved """
 game_saved = canvas_main.create_text(window_width - 100, window_height - 30, fill="white",
-                                font=("OCR A Extended", 20), text="Game Saved")
+                                     font=("OCR A Extended", 20), text="Game Saved")
 canvas_main.itemconfig(game_saved, state="hidden")
 
 """Adding Background to the main game"""
