@@ -39,8 +39,9 @@ from random import randint, shuffle
 from os import getlogin
 from math import sqrt, pow
 from time import sleep
-from pickle import dump as dmp, load as ld
+from pickle import dump, load as ld
 from webbrowser import open as opn
+from platform import system
 
 
 def configure_window():
@@ -50,7 +51,11 @@ def configure_window():
     Fixes the geometry such that the window is always opened at the center.
     """
     window.title("Into The Space")
-    window.iconbitmap("images/game_icon.ico")
+
+    if system() == "Windows":
+        window.iconbitmap("images/game_icon.ico")
+    else:
+        window.iconbitmap("images/game_icon.xbm")
 
     # Disabled resizing of the window.
     window.resizable(False, False)
@@ -74,13 +79,22 @@ def configure_window():
 
 def bind_keys():
     """
-    Binds the movement keys of the spaceship
-    Also binds the cheats when called
+    Binds the movement keys of the spaceship.
+    If arrow flag is true, arrow keys are binded.
+    If arrow flag is false, wasd keys are binded.
+    Also binds the cheats when called.
     """
-    canvas_main.bind("<Left>", move_spaceship_left)
-    canvas_main.bind("<Right>", move_spaceship_right)
-    canvas_main.bind("<Up>", move_spaceship_up)
-    canvas_main.bind("<Down>", move_spaceship_down)
+    global arrow_flag
+    if arrow_flag:
+        canvas_main.bind("<Left>", move_spaceship_left)
+        canvas_main.bind("<Right>", move_spaceship_right)
+        canvas_main.bind("<Up>", move_spaceship_up)
+        canvas_main.bind("<Down>", move_spaceship_down)
+    else:
+        canvas_main.bind("<a>", move_spaceship_left)
+        canvas_main.bind("<d>", move_spaceship_right)
+        canvas_main.bind("<w>", move_spaceship_up)
+        canvas_main.bind("<s>", move_spaceship_down)
     canvas_main.bind("<Shift-Z>", cheatz_reduce_speed_default)
     canvas_main.bind("<Shift-X>", cheatx_reduce_speed_by_one)
     canvas_main.bind("<Shift-C>", cheatc_increase_score)
@@ -89,13 +103,17 @@ def bind_keys():
 
 def unbind_keys():
     """
-    Unbinds the movement keys of the spaceship
-    Also unbinds the cheats
+    Unbinds the movement keys of the spaceship.
+    Also unbinds the cheats.
     """
     canvas_main.unbind("<Left>")
     canvas_main.unbind("<Right>")
     canvas_main.unbind("<Up>")
     canvas_main.unbind("<Down>")
+    canvas_main.unbind("<a>")
+    canvas_main.unbind("<d>")
+    canvas_main.unbind("<w>")
+    canvas_main.unbind("<s>")
     canvas_main.unbind("<Shift-Z>")
     canvas_main.unbind("<Shift-X>")
     canvas_main.unbind("<Shift-C>")
@@ -139,26 +157,43 @@ def spaceship_touches_sides():
     """
     This function unbinds movement of the spaceship if it touches the sides.
     When the player tries to go other direction, it binds the keys again.
-    """
+    The bindings depend on the status of the arrow flag which either binds wasd or arrows.
+   """
     # Unbinds if the spaceship touches any side.
     if spaceship_pos[0] > window_width - 100:
         canvas_main.unbind("<Right>")
+        canvas_main.unbind("<d>")
     if spaceship_pos[0] < 0:
         canvas_main.unbind("<Left>")
+        canvas_main.unbind("<a>")
     if spaceship_pos[1] > window_height - 100:
         canvas_main.unbind("<Down>")
+        canvas_main.unbind("<s>")
     if spaceship_pos[1] < 0:
         canvas_main.unbind("<Up>")
+        canvas_main.unbind("<w>")
 
     # Binds if it goes other direction.
     if spaceship_pos[0] < window_width - 100:
-        canvas_main.bind("<Right>", move_spaceship_right)
+        if arrow_flag:
+            canvas_main.bind("<Right>", move_spaceship_right)
+        else:
+            canvas_main.bind("<d>", move_spaceship_right)
     if spaceship_pos[0] > 0:
-        canvas_main.bind("<Left>", move_spaceship_left)
+        if arrow_flag:
+            canvas_main.bind("<Left>", move_spaceship_left)
+        else:
+            canvas_main.bind("<a>", move_spaceship_left)
     if spaceship_pos[1] < window_height - 100:
-        canvas_main.bind("<Down>", move_spaceship_down)
+        if arrow_flag:
+            canvas_main.bind("<Down>", move_spaceship_down)
+        else:
+            canvas_main.bind("<s>", move_spaceship_down)
     if spaceship_pos[1] > 0:
-        canvas_main.bind("<Up>", move_spaceship_up)
+        if arrow_flag:
+            canvas_main.bind("<Up>", move_spaceship_up)
+        else:
+            canvas_main.bind("<w>", move_spaceship_up)
 
 
 def cheatz_reduce_speed_default(_):
@@ -282,6 +317,7 @@ def game_over_buttons():
     When the game is over, this function is called.
     It displays all the required buttons and texts.
     """
+    # Sets the following button states to normal
     normal_buttons()
     canvas_main.itemconfig(restarted, state="normal")
     canvas_main.itemconfig(load, state="normal")
@@ -311,7 +347,6 @@ def main_menu(_):
     # Add buttons to main menu of canvas
     canvas_main.itemconfig(start, state="normal")
     canvas_main.itemconfig(load, state="normal")
-
     normal_buttons()
 
 
@@ -323,7 +358,7 @@ def pause_menu(_):
     """
     global pause_game
 
-    # pauses the game and adds buttons and hides texts.
+    # Pauses the game and adds buttons and hides texts.
     if not pause_game:
         # Setting the variable to True ends the main while loop.
         pause_game = True
@@ -332,6 +367,7 @@ def pause_menu(_):
         canvas_main.itemconfig(restarted, state="normal")
         canvas_main.itemconfig(save, state="normal")
         canvas_main.itemconfig(load, state="normal")
+        canvas_main.tag_raise(main_image)
         normal_buttons()
         unbind_keys()
 
@@ -355,8 +391,9 @@ def pause_menu(_):
         bind_keys()
 
         canvas_main.itemconfig(level, state="normal")
+        canvas_main.tag_raise(level)
 
-        # calls the falling function as long as not paused.
+        # Calls the falling function as long as not paused.
         asteroids_and_collision()
 
 
@@ -385,28 +422,32 @@ def restart_game():
     launches the main game function which starts the game from beginning.
     """
     global restart_flag, pause_game, score, asteroid_speed, level_number
+    # Sets the following variables to default
     pause_game = False
     restart_flag = True
     asteroid_speed = 4
     level_number = 1
     score = 0
 
+    # The game only adds the score to leaderboard file iff the score unequal zero
     if score != 0:
         file = open("leaderboard.txt", "a")
         file.write("\n" + str(score))
         file.close()
 
+    canvas_main.itemconfig(level, text="Level " + str(level_number) + "\n\nDodge the Asteroids")
+    canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
     canvas_main.itemconfig(game_over_score, state="hidden")
     canvas_main.itemconfig(game_saved, state="hidden")
     canvas_main.itemconfig(save, state="hidden")
-    canvas_main.itemconfig(level, text="Level " + str(level_number) + "\n\nDodge the Asteroids")
-    canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
+    hidden_buttons()
 
+    # Deletes all the asteroids from the last game
     for j in asteroid:
         canvas_main.delete(j)
-    hidden_buttons()
+
     main_game()
 
 
@@ -431,10 +472,13 @@ def leaderboard():
     canvas_leaderboard.bind("<Configure>",
                             lambda e: canvas_leaderboard.configure(scrollregion=canvas_leaderboard.bbox("all")))
 
+    # Adding 300 random stars to the background.
     for _ in range(300):
+        # Finds random spawn positions of stars.
         optionsbg_x = randint(0, window_width)
         optionsbg_y = randint(0, window_height)
 
+        # Selects a random size and colour of the stars
         options_size = randint(1, 5)
         options_color_chooser = randint(0, 4)
 
@@ -455,9 +499,11 @@ def leaderboard():
     canvas_main.itemconfig(game_saved, state="hidden")
     hidden_buttons()
 
+    # Displays the leaderboard text on top left
     Label(leaderboard_frame, text="Leaderboard:\n", font=("OCR A Extended", 35),
           bg="black", fg="white").pack(padx=50, pady=(40, 0))
 
+    # Makes a list with the scores stored in the leaderboard.txt file.
     unsorted = open("leaderboard.txt", "r")
     words = unsorted.readlines()
     for idx, val in enumerate(words):
@@ -468,6 +514,7 @@ def leaderboard():
     words = [int(x) for x in words]
     unsorted.close()
 
+    # Sorts the list in descending order.
     words.sort(reverse=True)
 
     file_sorted = open("leaderboardsorted.txt", "w")
@@ -498,13 +545,17 @@ def options_button_click():
     When clicked, they call the respective functions.
     For this screen, a new frame, canvas and background stars are created.
     """
-    global canvas_options
+    global canvas_options, selected_keybind
     # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
 
     # Creating a canvas for the leaderboard.
     canvas_options = Canvas(secondary_frame, bg="black", border=0)
     canvas_options.pack(side="left", fill="both", expand=1)
+
+    selected_keybind = canvas_options.create_text(window_width / 2, window_height / 2 + 80, fill="white",
+                                                  font=("OCR A Extended", 20), justify="center")
+    canvas_options.itemconfig(selected_keybind, state="hidden")
 
     # Adding 300 starts to reduce lag.
     for _ in range(300):
@@ -529,6 +580,7 @@ def options_button_click():
 
     canvas_main.itemconfig(cheats, state="normal")
     canvas_main.itemconfig(helps, state="normal")
+    canvas_main.itemconfig(key_binds, state="normal")
     canvas_main.itemconfig(backs, state="normal")
 
 
@@ -548,10 +600,54 @@ def cheat_codes():
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
 
     canvas_main.itemconfig(cheats, state="hidden")
+    canvas_main.itemconfig(key_binds, state="hidden")
     canvas_main.itemconfig(helps, state="hidden")
     canvas_main.itemconfig(backs, state="hidden")
 
     canvas_main.itemconfig(back1s, state="normal")
+
+
+def key_binds_options():
+    """
+    This function displays two buttons and hides the buttons from previous screen.
+    A text is displayed which describes what happens when clicked.
+    There is also a back button which hides the current buttons and takes back to options menu.
+    """
+    global options_text
+    explanation = "You can choose any of the two below key-binds\n" \
+                  "to move the spaceship"
+
+    options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 50, fill="white",
+                                              font=("OCR A Extended", 25), text=explanation, justify="center")
+
+    canvas_main.itemconfig(cheats, state="hidden")
+    canvas_main.itemconfig(key_binds, state="hidden")
+    canvas_main.itemconfig(helps, state="hidden")
+    canvas_main.itemconfig(backs, state="hidden")
+
+    canvas_main.itemconfig(arrows, state="normal")
+    canvas_main.itemconfig(wasd, state="normal")
+    canvas_main.itemconfig(back1s, state="normal")
+
+
+def arrows_keybinds():
+    """
+    When the "arrows" button is clicked this functions sets the arrow_flag to true.
+    The arrow_flag switches the key-binds from wasd to arrows
+    """
+    global arrow_flag
+    canvas_options.itemconfig(selected_keybind, text="Arrow keys selected", state="normal")
+    arrow_flag = True
+
+
+def wasd_keybinds():
+    """
+    When the "wasd" button is clicked this functions sets the arrow_flag to false.
+    The false arrow_flag switches the key-binds from arrows to wasd
+    """
+    global arrow_flag
+    canvas_options.itemconfig(selected_keybind, text="WASD keys selected", state="normal")
+    arrow_flag = False
 
 
 def help_player():
@@ -571,6 +667,7 @@ def help_player():
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
 
     canvas_main.itemconfig(cheats, state="hidden")
+    canvas_main.itemconfig(key_binds, state="hidden")
     canvas_main.itemconfig(helps, state="hidden")
     canvas_main.itemconfig(backs, state="hidden")
 
@@ -584,10 +681,14 @@ def back_clear_to_options():
     It makes a back button which connects to main menu.
     """
     canvas_main.itemconfig(cheats, state="normal")
+    canvas_main.itemconfig(key_binds, state="normal")
     canvas_main.itemconfig(helps, state="normal")
     canvas_main.itemconfig(backs, state="normal")
 
+    canvas_main.itemconfig(arrows, state="hidden")
+    canvas_main.itemconfig(wasd, state="hidden")
     canvas_main.itemconfig(back1s, state="hidden")
+    canvas_options.itemconfig(selected_keybind, state="hidden")
     canvas_options.delete(options_text)
 
 
@@ -600,6 +701,7 @@ def back_clear():
     for widget in secondary_frame.winfo_children():
         widget.destroy()
     canvas_main.itemconfig(cheats, state="hidden")
+    canvas_main.itemconfig(key_binds, state="hidden")
     canvas_main.itemconfig(helps, state="hidden")
     canvas_main.itemconfig(backs, state="hidden")
     secondary_frame.pack_forget()
@@ -616,6 +718,7 @@ def back_clear():
         canvas_main.itemconfig(load, state="normal")
     normal_buttons()
     canvas_main.itemconfig(main_image, state="normal")
+    canvas_main.tag_raise(main_image)
 
 
 def save_game():
@@ -625,10 +728,10 @@ def save_game():
     """
     global score, asteroid_speed, spaceship_pos, level_number
 
-    dmp(score, open("save/score.bat", "wb"))
-    dmp(asteroid_speed, open("save/asteroid_speed.bat", "wb"))
-    dmp(level_number, open("save/level.bat", "wb"))
-    dmp(spaceship_pos, open("save/spaceship_pos.bat", "wb"))
+    dump(score, open("save/score.bat", "wb"))
+    dump(asteroid_speed, open("save/asteroid_speed.bat", "wb"))
+    dump(level_number, open("save/level.bat", "wb"))
+    dump(spaceship_pos, open("save/spaceship_pos.bat", "wb"))
 
     canvas_main.itemconfig(game_saved, state="normal")
 
@@ -689,6 +792,7 @@ def asteroids_and_collision():
                 score += 10
                 score_txt = "Score: " + str(score)
                 canvas_main.itemconfig(scoreText, text=score_txt)
+                canvas_main.tag_raise(scoreText)
                 if score != 0 and score % 100 == 0:
                     asteroid_speed += 1
                     level_number += 1
@@ -729,7 +833,7 @@ def asteroids_and_collision():
                     break
             canvas_main.move(asteroid[i], 0, y[i])
         if not game_over:
-            sleep(0.0001)
+            sleep(0.001)
             window.update()
             continue
         break
@@ -782,7 +886,7 @@ def main_game():
     # displaying the score on the top right.
     scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15,
                                         fill="white", font=("OCR A Extended", 30), text=score_text)
-    canvas_main.focus(score_text)
+    canvas_main.tag_raise(score_text)
 
     "Stores the initial asteroid positions to a list"
     asteroid = []
@@ -794,6 +898,7 @@ def main_game():
                                                  image=asteroid_image[asteroid_select],
                                                  anchor="nw"))
     canvas_main.itemconfig(level, state="normal")
+    canvas_main.tag_raise(level)
     asteroids_and_collision()
 
 
@@ -807,14 +912,21 @@ window_height = 900
 configure_window()
 
 "Defining various variables needed all over the game."
-pause_game = False
+arrow_flag = True
 restart_flag = False
-game_over = False
 invulnerable = False
+pause_game = False
+game_over = False
 spaceship_pos = None
-score = 0
+options_text = None
+canvas_options = None
+selected_keybind = None
+asteroid = []
+scoreText = ""
+game_over_text = ""
 asteroid_speed = 4
 level_number = 1
+score = 0
 
 "Creating the Main Canvas of the game."
 # Will contain most of the game
@@ -909,16 +1021,15 @@ Position of the buttons are fixed using the coords function.
 
 "Start button."
 start_org = Image.open("images/start.png")
-start_resized = start_org.resize((200, 75), Image.Resampling.LANCZOS)
+start_resized = start_org.resize((200, 75))
 start_image = ImageTk.PhotoImage(start_resized)
 start_button = Button(window, image=start_image, bg="black", border=0, command=main_game)
 start = canvas_main.create_window(window_width / 2, window_height / 2 - 200, window=start_button)
 canvas_main.itemconfig(start, state="hidden")
-start_coords = canvas_main.coords(start)
 
 "Resume button."
 resume_org = Image.open("images/resume.png")
-resume_resized = resume_org.resize((244, 80), Image.Resampling.LANCZOS)
+resume_resized = resume_org.resize((244, 80))
 resume_image = ImageTk.PhotoImage(resume_resized)
 resume_button = Button(window, image=resume_image, border=0, bg="black", command=resume_button_click)
 resume = canvas_main.create_window(window_width / 2, window_height / 2 - 300, window=resume_button)
@@ -927,7 +1038,7 @@ resume_coords = canvas_main.coords(resume)
 
 "Restart button."
 restart_org = Image.open("images/restart.png")
-restart_resized = restart_org.resize((244, 80), Image.Resampling.LANCZOS)
+restart_resized = restart_org.resize((244, 80))
 restart_image = ImageTk.PhotoImage(restart_resized)
 restart_button = Button(window, image=restart_image, border=0, bg="black", command=restart_game)
 restarted = canvas_main.create_window(window_width / 2, window_height / 2 - 200, window=restart_button)
@@ -936,7 +1047,7 @@ restart_coords = canvas_main.coords(restarted)
 
 "Save button."
 save_org = Image.open("images/save.png")
-save_resized = save_org.resize((204, 80), Image.Resampling.LANCZOS)
+save_resized = save_org.resize((204, 80))
 save_image = ImageTk.PhotoImage(save_resized)
 save_button = Button(window, image=save_image, border=0, bg="black", command=save_game)
 save = canvas_main.create_window(window_width / 2, window_height / 2 - 50, window=save_button)
@@ -945,7 +1056,7 @@ save_coords = canvas_main.coords(save)
 
 "Load button."
 load_org = Image.open("images/load.png")
-load_resized = load_org.resize((204, 80), Image.Resampling.LANCZOS)
+load_resized = load_org.resize((204, 80))
 load_image = ImageTk.PhotoImage(load_resized)
 load_button = Button(window, image=load_image, border=0, bg="black", command=load_game)
 load = canvas_main.create_window(window_width / 2, window_height / 2 - 100, window=load_button)
@@ -954,7 +1065,7 @@ load_coords = canvas_main.coords(load)
 
 "Leaderboard button."
 leaderboard_org = Image.open("images/leaderboard.png")
-leaderboard_resized = leaderboard_org.resize((474, 80), Image.Resampling.LANCZOS)
+leaderboard_resized = leaderboard_org.resize((474, 80))
 leaderboard_image = ImageTk.PhotoImage(leaderboard_resized)
 leaderboard_button = Button(window, image=leaderboard_image, border=0, bg="black", command=leaderboard)
 leaderboards = canvas_main.create_window(window_width / 2, window_height / 2, window=leaderboard_button)
@@ -963,7 +1074,7 @@ leaderboard_coords = canvas_main.coords(leaderboards)
 
 "Options button."
 options_org = Image.open("images/options.png")
-options_resized = options_org.resize((240, 75), Image.Resampling.LANCZOS)
+options_resized = options_org.resize((240, 75))
 options_image = ImageTk.PhotoImage(options_resized)
 options_button = Button(window, image=options_image, bg="black", border=0, command=options_button_click)
 options = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=options_button)
@@ -972,33 +1083,55 @@ options_coords = canvas_main.coords(options)
 
 "Cheat button."
 cheat_org = Image.open("images/cheat.png")
-cheat_resized = cheat_org.resize((204, 75), Image.Resampling.LANCZOS)
+cheat_resized = cheat_org.resize((204, 75))
 cheat_image = ImageTk.PhotoImage(cheat_resized)
 cheat_button = Button(window, image=cheat_image, border=0, bg="black", command=cheat_codes)
-cheats = canvas_main.create_window(window_width / 2, window_height / 2 - 50, window=cheat_button)
+cheats = canvas_main.create_window(window_width / 2, window_height / 2 - 100, window=cheat_button)
 canvas_main.itemconfig(cheats, state="hidden")
-cheat_coords = canvas_main.coords(cheats)
+
+"Key_binds button."
+key_binds_org = Image.open("images/key_binds.png")
+key_binds_resized = key_binds_org.resize((354, 80))
+key_binds_image = ImageTk.PhotoImage(key_binds_resized)
+key_binds_button = Button(window, image=key_binds_image, border=0, bg="black", command=key_binds_options)
+key_binds = canvas_main.create_window(window_width / 2, window_height / 2, window=key_binds_button)
+canvas_main.itemconfig(key_binds, state="hidden")
+
+"Arrows button."
+arrows_org = Image.open("images/arrows.png")
+arrows_resized = arrows_org.resize((334, 90))
+arrows_image = ImageTk.PhotoImage(arrows_resized)
+arrows_button = Button(window, image=arrows_image, border=0, bg="black", command=arrows_keybinds)
+arrows = canvas_main.create_window(window_width / 2 - 150, window_height / 2, window=arrows_button)
+canvas_main.itemconfig(arrows, state="hidden")
+
+"Wasd button."
+wasd_org = Image.open("images/wasd.png")
+wasd_resized = wasd_org.resize((254, 90))
+wasd_image = ImageTk.PhotoImage(wasd_resized)
+wasd_button = Button(window, image=wasd_image, border=0, bg="black", command=wasd_keybinds)
+wasd = canvas_main.create_window(window_width / 2 + 150, window_height / 2, window=wasd_button)
+canvas_main.itemconfig(wasd, state="hidden")
 
 "Help button."
 help_org = Image.open("images/help.png")
-help_resized = help_org.resize((204, 80), Image.Resampling.LANCZOS)
+help_resized = help_org.resize((174, 80))
 help_image = ImageTk.PhotoImage(help_resized)
 help_button = Button(window, image=help_image, border=0, bg="black", command=help_player)
-helps = canvas_main.create_window(window_width / 2, window_height / 2 + 50, window=help_button)
+helps = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=help_button)
 canvas_main.itemconfig(helps, state="hidden")
-help_coords = canvas_main.coords(helps)
 
 "Back button."
 back_org = Image.open("images/back.png")
-back_resized = back_org.resize((204, 75), Image.Resampling.LANCZOS)
+back_resized = back_org.resize((204, 75))
 back_image = ImageTk.PhotoImage(back_resized)
 back_button = Button(window, image=back_image, border=0, bg="black", command=back_clear)
 backs = canvas_main.create_window(window_width / 2, window_height - window_height / 7, window=back_button)
 canvas_main.itemconfig(backs, state="hidden")
 
-"Back1 button."
+"Back button to options."
 back1_org = Image.open("images/back.png")
-back1_resized = back1_org.resize((204, 75), Image.Resampling.LANCZOS)
+back1_resized = back1_org.resize((204, 75))
 back1_image = ImageTk.PhotoImage(back1_resized)
 back1_button = Button(window, image=back1_image, border=0, bg="black", command=back_clear_to_options)
 back1s = canvas_main.create_window(window_width / 2, window_height - window_height / 7, window=back1_button)
@@ -1006,7 +1139,7 @@ canvas_main.itemconfig(back1s, state="hidden")
 
 "Exit button."
 exit_org = Image.open("images/exit.png")
-exit_resized = exit_org.resize((200, 70), Image.Resampling.LANCZOS)
+exit_resized = exit_org.resize((200, 70))
 exit_image = ImageTk.PhotoImage(exit_resized)
 exit_button = Button(window, image=exit_image, bg="black", border=0, command=window.destroy)
 exited = canvas_main.create_window(window_width / 2, window_height / 2 + 200, window=exit_button)
@@ -1015,7 +1148,7 @@ exit_coords = canvas_main.coords(exited)
 
 "Spaceship."
 spaceship_org = Image.open("images/spaceship_image.png")
-spaceship_resized = spaceship_org.resize((100, 100), Image.Resampling.LANCZOS)
+spaceship_resized = spaceship_org.resize((100, 100))
 spaceship_image = ImageTk.PhotoImage(spaceship_resized)
 spaceship = canvas_main.create_image(window_width / 2 - 40,
                                      window_height - window_height / 6,
@@ -1026,7 +1159,7 @@ canvas_main.itemconfig(spaceship, state="hidden")
 asteroid_image = []
 for m in range(1, 5):
     asteroid_org = Image.open("images/asteroid_" + str(m) + ".png")
-    asteroid_resized = asteroid_org.resize((120, 120), Image.Resampling.LANCZOS)
+    asteroid_resized = asteroid_org.resize((120, 120))
     asteroid_image.append(ImageTk.PhotoImage(asteroid_resized))
 
 # Keeps looping the gui till closed manually.
