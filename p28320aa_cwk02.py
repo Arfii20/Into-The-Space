@@ -49,32 +49,33 @@ def configure_window():
     Makes the main window not resizable to minimise complexity.
     Fixes the geometry such that the window is always opened at the center.
     """
-    window.title("Asteroid Game")
+    window.title("Into The Space")
     window.iconbitmap("images/game_icon.ico")
 
-    # Disabled resizing of the window
+    # Disabled resizing of the window.
     window.resizable(False, False)
 
-    """ Fixing geometry so that the window opens at the center """
-    # Width and height of the window
+    "Fixing geometry so that the window opens at the center"
+    # Width and height of the window.
     width = window_width
     height = window_height
 
-    # Screen width and height
+    # Screen width and height.
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
 
-    # Change of coordinates
+    # Determines the change of coordinates.
     x = int(screen_width / 2 - width / 2)
     y = int(screen_height / 2 - height / 2 - 20)
 
-    # screen position
+    # Sets the screen position.
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 
 def bind_keys():
     """
     Binds the movement keys of the spaceship
+    Also binds the cheats when called
     """
     canvas_main.bind("<Left>", move_spaceship_left)
     canvas_main.bind("<Right>", move_spaceship_right)
@@ -89,6 +90,7 @@ def bind_keys():
 def unbind_keys():
     """
     Unbinds the movement keys of the spaceship
+    Also unbinds the cheats
     """
     canvas_main.unbind("<Left>")
     canvas_main.unbind("<Right>")
@@ -102,7 +104,8 @@ def unbind_keys():
 
 def move_spaceship_left(_):
     """
-    Moves spaceship left 15 pixels everytime it is called
+    Moves spaceship left 15 pixels everytime it is called.
+    Takes an event as an argument and that is why used "_".
     """
 
     canvas_main.move(spaceship, -15, 0)
@@ -110,21 +113,24 @@ def move_spaceship_left(_):
 
 def move_spaceship_right(_):
     """
-    Moves spaceship right 15 pixels everytime it is called
+    Moves spaceship right 15 pixels everytime it is called.
+    Takes an event as an argument and that is why used "_".
     """
     canvas_main.move(spaceship, 15, 0)
 
 
 def move_spaceship_up(_):
     """
-    Moves spaceship up 15 pixels everytime it is called
+    Moves spaceship up 15 pixels everytime it is called.
+    Takes an event as an argument and that is why used "_".
     """
     canvas_main.move(spaceship, 0, -15)
 
 
 def move_spaceship_down(_):
     """
-    Moves spaceship down 15 pixels everytime it is called
+    Moves spaceship down 15 pixels everytime it is called.
+    Takes an event as an argument and that is why used "_".
     """
     canvas_main.move(spaceship, 0, 15)
 
@@ -134,7 +140,7 @@ def spaceship_touches_sides():
     This function unbinds movement of the spaceship if it touches the sides.
     When the player tries to go other direction, it binds the keys again.
     """
-    # Unbinds if touches
+    # Unbinds if the spaceship touches any side.
     if spaceship_pos[0] > window_width - 100:
         canvas_main.unbind("<Right>")
     if spaceship_pos[0] < 0:
@@ -144,7 +150,7 @@ def spaceship_touches_sides():
     if spaceship_pos[1] < 0:
         canvas_main.unbind("<Up>")
 
-    # Binds if it goes other direction
+    # Binds if it goes other direction.
     if spaceship_pos[0] < window_width - 100:
         canvas_main.bind("<Right>", move_spaceship_right)
     if spaceship_pos[0] > 0:
@@ -157,47 +163,60 @@ def spaceship_touches_sides():
 
 def cheatz_reduce_speed_default(_):
     """
-    When pressed Shift+Z the speed is set to 4
+    When pressed Shift+Z the speed is set to 4.
+    Takes an event as an argument and that is why used "_".
     """
     global asteroid_speed
     asteroid_speed = 4
     canvas_main.itemconfig(cheat, state="normal", text="Spead set to default")
+    # Raising so that any other object does not come in front of it.
     canvas_main.tag_raise(cheat)
 
 
 def cheatx_reduce_speed_by_one(_):
     """
-     When pressed Shift+X the speed is reduced by 1
-     """
+    When pressed Shift+X the speed is reduced by 1.
+    Takes an event as an argument and that is why used "_".
+    """
     global asteroid_speed
     if asteroid_speed > 4:
         asteroid_speed -= 1
     canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
+    # Raising so that any other object does not come in front of it.
     canvas_main.tag_raise(cheat)
 
 
 def cheatc_increase_score(_):
     """
-     When pressed Shift+C the score will increase by 500
-     """
+    When pressed Shift+C the score will increase by 500.
+    Takes an event as an argument and that is why used "_".
+    """
     global score
     score += 500
     canvas_main.itemconfig(cheat, state="normal", text="Score increased by 500")
+    # Raising so that any other object does not come in front of it.
     canvas_main.tag_raise(cheat)
 
 
 def cheatv_invulnerability(_):
     """
-    When pressed Shift+V the collision detection will be turned off and on
+    When pressed Shift+V the collision detection will be turned off and on.
+    Takes an event as an argument and that is why used "_".
     """
     global invulnerable
+
+    # Turns on GOD Mode
     if not invulnerable:
         invulnerable = True
         canvas_main.itemconfig(cheat, state="normal", text="Invulnerability On")
+        # Raising so that any other object does not come in front of it.
         canvas_main.tag_raise(cheat)
+
+    # Turns off GOD Mode
     elif invulnerable:
         invulnerable = False
         canvas_main.itemconfig(cheat, state="normal", text="Invulnerability Off")
+        # Raising so that any other object does not come in front of it.
         canvas_main.tag_raise(cheat)
 
 
@@ -205,36 +224,41 @@ def boss_key(_):
     """
     When tab is clicked, it opens the boss.css file.
     It also pauses the game and shows all the buttons.
+    Takes an event as an argument and that is why used "_".
     """
     global pause_game, game_over
     opn("boss.css")
 
     pause_game = True
-    normal_buttons()
+
+    # Does not show the resume button if in the game over menu.
     if not game_over:
         canvas_main.itemconfig(resume, state="normal")
         canvas_main.coords(save, load_coords[0] + 110, load_coords[1] + 50)
+
+    # Shows the following buttons.
+    normal_buttons()
     canvas_main.itemconfig(restarted, state="normal")
     canvas_main.itemconfig(save, state="normal")
+    canvas_main.itemconfig(load, state="normal")
+
+    # Hides the following objects.
     canvas_main.itemconfig(level, state="hidden")
     canvas_main.itemconfig(cheat, state="hidden")
-    canvas_main.itemconfig(load, state="normal")
+
+    # Moves the load button from initial position.
     canvas_main.coords(load, load_coords[0] - 110, load_coords[1] + 50)
 
 
 def normal_buttons():
-    """
-    Makes the exit, leaderboard and options buttons visible again
-    """
+    """Makes the exit, leaderboard and options buttons visible again."""
     canvas_main.itemconfig(options, state="normal")
     canvas_main.itemconfig(exited, state="normal")
     canvas_main.itemconfig(leaderboards, state="normal")
 
 
 def hidden_buttons():
-    """
-    Hides the exit, leaderboard and options buttons
-    """
+    """Hides the exit, leaderboard and options buttons."""
     canvas_main.itemconfig(exited, state="hidden")
     canvas_main.itemconfig(leaderboards, state="hidden")
     canvas_main.itemconfig(options, state="hidden")
@@ -242,7 +266,9 @@ def hidden_buttons():
 
 def shift_buttons(y):
     """
-    Used for changing the button positions along the y-axis
+    Used for changing the button positions along the y-axis.
+    Changes are applied to resume, restart, exit, leaderboard and options button.
+    Argument y - takes the buttons y pixels down.
     """
     canvas_main.coords(resume, resume_coords[0], resume_coords[1] + y)
     canvas_main.coords(restarted, restart_coords[0], restart_coords[1] + y)
@@ -253,26 +279,33 @@ def shift_buttons(y):
 
 def game_over_buttons():
     """
-    When the game is over, this function is called, and it displays all the buttons again.
+    When the game is over, this function is called.
+    It displays all the required buttons and texts.
     """
     normal_buttons()
-    canvas_main.itemconfig(game_over_score, state="normal", text="Score: " + str(score))
-    canvas_main.tag_raise(game_over_score)
     canvas_main.itemconfig(restarted, state="normal")
     canvas_main.itemconfig(load, state="normal")
     canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
+
+    # Shows the game over score and raises it above all.
+    canvas_main.itemconfig(game_over_score, state="normal", text="Score: " + str(score))
+    canvas_main.tag_raise(game_over_score)
+
+    # Deletes the "GAME OVER" text.
     canvas_main.delete(game_over_text)
 
 
 def main_menu(_):
     """
     This function removes the welcome screen and displays all the buttons.
+    Takes an event as an argument and that is why used "_".
     """
-    # Deleting the text
-    canvas_main.delete(press_any_key)
+    # Deleting the text.
+    canvas_main.delete(press_enter_to_continue)
     canvas_main.delete(welcome_text)
+    canvas_main.delete(title_text)
 
-    # Unbinds the enter button from first screen
+    # Unbinds the enter button from first screen.
     canvas_main.unbind("<Return>")
 
     # Add buttons to main menu of canvas
@@ -284,50 +317,51 @@ def main_menu(_):
 
 def pause_menu(_):
     """
-    When escape is clicked, the game is paused which stop everything and displays all the buttons
+    When escape is clicked, the game is paused which stop everything and displays all the buttons.
     When escape is clicked again, the game removes buttons and continues the game.
+    Takes an event as an argument and that is why used "_".
     """
     global pause_game
 
-    # pauses the game and adds buttons
+    # pauses the game and adds buttons and hides texts.
     if not pause_game:
+        # Setting the variable to True ends the main while loop.
         pause_game = True
         canvas_main.itemconfig(main_image, state="normal")
-
         canvas_main.itemconfig(resume, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
-        canvas_main.itemconfig(level, state="hidden")
-        canvas_main.itemconfig(cheat, state="hidden")
         canvas_main.itemconfig(save, state="normal")
         canvas_main.itemconfig(load, state="normal")
+        normal_buttons()
+        unbind_keys()
+
+        canvas_main.itemconfig(level, state="hidden")
+        canvas_main.itemconfig(cheat, state="hidden")
+
+        # Changes coordinates of load and save so that they can be side by side.
         canvas_main.coords(save, save_coords[0] + 110, save_coords[1])
         canvas_main.coords(load, load_coords[0] - 110, load_coords[1] + 50)
 
-        normal_buttons()
-
-        unbind_keys()
-
-    # unpauses the game and hides buttons
+    # Unpauses the game and hides buttons and shows texts.
     elif pause_game:
+        # Setting the variable to false resumes the main while loop.
         pause_game = False
         canvas_main.itemconfig(resume, state="hidden")
         canvas_main.itemconfig(restarted, state="hidden")
         canvas_main.itemconfig(save, state="hidden")
         canvas_main.itemconfig(main_image, state="hidden")
-        canvas_main.itemconfig(level, state="normal")
         canvas_main.itemconfig(load, state="hidden")
-
         hidden_buttons()
         bind_keys()
 
-        # calls the falling function as long as not paused
+        canvas_main.itemconfig(level, state="normal")
+
+        # calls the falling function as long as not paused.
         asteroids_and_collision()
 
 
 def resume_button_click():
-    """
-    When resume button is clicked, clears the buttons from the screen and resumes all the processes
-    """
+    """When resume button is clicked, clears the buttons from the screen and resumes all the processes."""
     global pause_game
     canvas_main.itemconfig(resume, state="hidden")
     canvas_main.itemconfig(restarted, state="hidden")
@@ -335,10 +369,13 @@ def resume_button_click():
     canvas_main.itemconfig(main_image, state="hidden")
     canvas_main.itemconfig(game_saved, state="hidden")
     canvas_main.itemconfig(load, state="hidden")
-
     hidden_buttons()
     bind_keys()
+
+    # Setting the variable to false resumes the main while loop.
     pause_game = False
+
+    # Calls the function which resumes the falling of the asteroids.
     asteroids_and_collision()
 
 
@@ -364,9 +401,8 @@ def restart_game():
     canvas_main.itemconfig(game_over_score, state="hidden")
     canvas_main.itemconfig(game_saved, state="hidden")
     canvas_main.itemconfig(save, state="hidden")
-    canvas_main.itemconfig(level, text="      Level " + str(level_number) + "\n\nDodge the Asteroids")
+    canvas_main.itemconfig(level, text="Level " + str(level_number) + "\n\nDodge the Asteroids")
     canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
-
 
     for j in asteroid:
         canvas_main.delete(j)
@@ -379,18 +415,18 @@ def leaderboard():
     Makes the leaderboard which displays the top 10 scores in descending order.
     Hides all the previous widgets and uses file handling to sort and display scores.
     """
-    # Packing the outer leaderboard frame
+    # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
 
-    # Creating a canvas for the leaderboard
+    # Creating a canvas for the leaderboard.
     canvas_leaderboard = Canvas(secondary_frame, bg="black", border=0)
     canvas_leaderboard.pack(side="left", fill="both", expand=1)
 
-    # Creating a scrollbar for the leaderboard
+    # Creating a scrollbar for the leaderboard.
     leaderboard_scrollbar = ttk.Scrollbar(secondary_frame, orient="vertical", command=canvas_leaderboard.yview)
     leaderboard_scrollbar.pack(side="right", fill="y")
 
-    " configure the leaderboard canvas "
+    "configure the leaderboard canvas "
     canvas_leaderboard.configure(yscrollcommand=leaderboard_scrollbar.set)
     canvas_leaderboard.bind("<Configure>",
                             lambda e: canvas_leaderboard.configure(scrollregion=canvas_leaderboard.bbox("all")))
@@ -405,11 +441,11 @@ def leaderboard():
         canvas_leaderboard.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
                                        fill=color[options_color_chooser])
 
-    # Creating the main leaderboard frame
+    # Creating the main leaderboard frame.
     leaderboard_frame = Frame(canvas_leaderboard, width=window_width, height=window_height, bg="black", border=0)
     canvas_leaderboard.create_window((0, 0), window=leaderboard_frame, anchor="nw")
 
-    # Hides the main menu buttons
+    # Hides the main menu buttons.
     canvas_main.itemconfig(main_image, state="hidden")
     canvas_main.itemconfig(start, state="hidden")
     canvas_main.itemconfig(load, state="hidden")
@@ -457,15 +493,20 @@ def leaderboard():
 
 
 def options_button_click():
+    """
+    When the options button is clicked, it creates three buttons and hides the earlier ones.
+    When clicked, they call the respective functions.
+    For this screen, a new frame, canvas and background stars are created.
+    """
     global canvas_options
-    # Packing the outer leaderboard frame
+    # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
 
-    # Creating a canvas for the leaderboard
+    # Creating a canvas for the leaderboard.
     canvas_options = Canvas(secondary_frame, bg="black", border=0)
     canvas_options.pack(side="left", fill="both", expand=1)
 
-    # Adding 300 starts to reduce lag
+    # Adding 300 starts to reduce lag.
     for _ in range(300):
         optionsbg_x = randint(0, window_width)
         optionsbg_y = randint(0, window_height)
@@ -476,7 +517,7 @@ def options_button_click():
         canvas_options.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
                                    fill=color[options_color_chooser])
 
-    # Hides the main menu buttons
+    # Hides the main menu buttons.
     canvas_main.itemconfig(main_image, state="hidden")
     canvas_main.itemconfig(game_saved, state="hidden")
     canvas_main.itemconfig(start, state="hidden")
@@ -492,7 +533,10 @@ def options_button_click():
 
 
 def cheat_codes():
-    """ Cheat Codes """
+    """
+    Displays and tells the user what the Cheat Codes are.
+    Also mentions what the boss key is.
+    """
     global options_text
     explanation = "Reset asteroid speed to default:\nShift + z \n\n" \
                   "Reduce asteroid speed by 1:\nShift + x \n\n" \
@@ -511,7 +555,10 @@ def cheat_codes():
 
 
 def help_player():
-    """ Cheat Codes """
+    """
+    Displays text and a back button to get back to options screen.
+    Explains to the player the mechanism of the game.
+    """
     global options_text
     explanation = "The player has to avoid the asteroids to earn score and survive\n\n" \
                   "The speed and level will increase every 100 scores\n\n" \
@@ -531,6 +578,11 @@ def help_player():
 
 
 def back_clear_to_options():
+    """
+    This function clears the cheat code or help screen.
+    It brings back the options screen.
+    It makes a back button which connects to main menu.
+    """
     canvas_main.itemconfig(cheats, state="normal")
     canvas_main.itemconfig(helps, state="normal")
     canvas_main.itemconfig(backs, state="normal")
@@ -569,7 +621,7 @@ def back_clear():
 def save_game():
     """
     Saves the score, speed and spaceship position for the player to load later.
-    Unfortunately this does not save the asteroid positions
+    Unfortunately this does not save the asteroid positions.
     """
     global score, asteroid_speed, spaceship_pos, level_number
 
@@ -619,19 +671,6 @@ def load_game():
     hidden_buttons()
     main_game()
 
-    #
-    # canvas_main.itemconfig(resume, state="hidden")
-    # canvas_main.itemconfig(restarted, state="hidden")
-    # canvas_main.itemconfig(game_over_score, state="hidden")
-    # canvas_main.itemconfig(game_saved, state="hidden")
-    # canvas_main.itemconfig(save, state="hidden")
-    # canvas_main.itemconfig(level, text="      Level " + str(level_number) + "\n\nDodge the Asteroids")
-    # canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
-    # for j in asteroid:
-    #     canvas_main.delete(j)
-    # hidden_buttons()
-    # main_game()
-
 
 def asteroids_and_collision():
     """
@@ -666,11 +705,11 @@ def asteroids_and_collision():
             spaceship_touches_sides()
 
             if not invulnerable:
-                # Collision detection
+                # Collision detection system.
                 game_over = 110 > sqrt(pow(asteroid_pos[0] - spaceship_pos[0], 2)
                                        + pow(asteroid_pos[1] - spaceship_pos[1], 2))
 
-                # Game over
+                # When game is over, the following actions are taken
                 if game_over:
                     unbind_keys()
                     canvas_main.unbind("<Escape>")
@@ -706,42 +745,46 @@ def main_game():
 
     shift_buttons(50)
 
-    # Display only if the game starts from 0
+    # Display only if the game starts from 0.
     if score == 0:
-        canvas_main.itemconfig(level, text=("      Level " + str(level_number) + "\n\nDodge the Asteroids"))
+        canvas_main.itemconfig(level, text=("Level " + str(level_number) + "\n\nDodge the Asteroids"))
 
-    # Hides the main menu buttons
+    # Hides the main menu buttons.
     canvas_main.itemconfig(main_image, state="hidden")
     canvas_main.itemconfig(start, state="hidden")
     canvas_main.itemconfig(load, state="hidden")
     hidden_buttons()
 
-    # Deletes the scoreText when restarting
+    # Deletes the scoreText when restarting.
     if restart_flag:
         canvas_main.delete(scoreText)
         restart_flag = False
 
-    # Adding all the images
+    # Adding the spaceship.
     canvas_main.itemconfig(spaceship, state="normal")
 
-    """ Keybindings """
+    """ 
+    Binding the keys to control spaceship and pause the game
+    Binding the cheats to their binds and the boss key to TAB as well
+    """
+    # This function binds all the keys.
     bind_keys()
     canvas_main.bind("<Escape>", pause_menu)
 
-    # Boss Key TAB
+    # Boss Key - TAB.
     canvas_main.bind("<Tab>", boss_key)
     canvas_main.focus_set()
 
-    """ Making the scoring system """
-    # storing and displaying the score
+    "Making the scoring system"
+    # storing and displaying the score.
     score_text = "Score: " + str(score)
 
-    # displaying the score on the top right
+    # displaying the score on the top right.
     scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15,
                                         fill="white", font=("OCR A Extended", 30), text=score_text)
     canvas_main.focus(score_text)
 
-    """ Stores the initial asteroid positions to a list """
+    "Stores the initial asteroid positions to a list"
     asteroid = []
     for _ in range(4):
         asteroid_x = randint(50, window_width - 110)
@@ -756,14 +799,14 @@ def main_game():
 
 window = Tk()
 
-"""Defining variables"""
-# Width and height of the window
+# Setting the width and height of the main window.
 window_width = 1440
 window_height = 900
 
+# Calls the function to configure the window size and position.
 configure_window()
 
-# Variables
+"Defining various variables needed all over the game."
 pause_game = False
 restart_flag = False
 game_over = False
@@ -773,70 +816,98 @@ score = 0
 asteroid_speed = 4
 level_number = 1
 
-""" Creating the Canvas """
+"Creating the Main Canvas of the game."
+# Will contain most of the game
 canvas_main = Canvas(window, width=window_width, height=window_height, bg="black")
 canvas_main.pack(fill="both", expand=True)
 
-""" Creating a leaderboard frame """
-# There is an outer frame to contain a canvas which will contain another frame
+"Creating a leaderboard frame."
+# There is an outer frame to contain a canvas which will contain another frame.
 secondary_frame = Frame(canvas_main, border=0)
 
-""" Score display after game over """
-game_over_score = canvas_main.create_text(window_width / 2, window_height / 5, fill="white",
-                                          font=("OCR A Extended", 60))
-canvas_main.itemconfig(game_over_score, state="hidden")
-
-""" Cheats Message """
-cheat = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
-                                font=("OCR A Extended", 20))
-canvas_main.itemconfig(cheat, state="hidden")
-
-""" Game Saved """
-game_saved = canvas_main.create_text(window_width - 100, window_height - 30, fill="white",
-                                     font=("OCR A Extended", 20), text="Game Saved")
-canvas_main.itemconfig(game_saved, state="hidden")
-
-"""Adding Background to the main game"""
-# Color palette
-color = ["white", "#fefefe", "#dfdfdf", "#ad7f00", "#828181"]
-
-# Adding 300 starts to reduce lag
-for _ in range(300):
-    bg_x = randint(0, window_width)
-    bg_y = randint(0, window_height)
-
-    size = randint(1, 5)
-    color_chooser = randint(0, 4)
-
-    canvas_main.create_oval(bg_x, bg_y, bg_x + size, bg_y + size, fill=color[color_chooser])
-
-# level_number text that will be shown upon each level
-level = canvas_main.create_text(window_width / 2, window_height / 7, fill="white", font=("OCR A Extended", 25))
-canvas_main.itemconfig(level, state="hidden")
-
-""" Start menu """
-# main menu image
+"Background image of menus."
+# Will be shown on title page, start, pause and game over menu.
 main_menu_image = ImageTk.PhotoImage(Image.open("images/main.png"))
 main_image = canvas_main.create_image(window_width / 2, window_height / 2,
                                       image=main_menu_image, anchor="center")
 canvas_main.itemconfig(main_image, state="normal")
 
-welcome_text = canvas_main.create_text(window_width / 2, window_height / 2 - 30,
+"""
+The following are different texts that will be displayed at certain point.
+Made here to reduce global variable usages.
+Set to hidden for later usages when needed.
+"""
+
+# This will display the final score after the game is over.
+game_over_score = canvas_main.create_text(window_width / 2, window_height / 5, fill="white",
+                                          font=("OCR A Extended", 60))
+canvas_main.itemconfig(game_over_score, state="hidden")
+
+# This will show the cheat message when any cheat is activated. Modified later for different cheats.
+cheat = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
+                                font=("OCR A Extended", 20))
+canvas_main.itemconfig(cheat, state="hidden")
+
+# When the game is saved, this will be written at the bottom right.
+game_saved = canvas_main.create_text(window_width - 100, window_height - 30, fill="white",
+                                     font=("OCR A Extended", 20), text="Game Saved")
+canvas_main.itemconfig(game_saved, state="hidden")
+
+# level_number text that will be shown upper mid upon each level increment.
+level = canvas_main.create_text(window_width / 2, window_height / 7, fill="white",
+                                font=("OCR A Extended", 25), justify="center")
+canvas_main.itemconfig(level, state="hidden")
+
+"""
+This will add a background of stars to the whole game.
+For this, canvas shapes, ovals, are used of random sizes at random places.
+Inspired from stewart's videos and modified for my needs.
+"""
+# Color palette of 5 different colours.
+color = ["white", "#fefefe", "#dfdfdf", "#ad7f00", "#828181"]
+
+# Made 300 starts to reduce lag as higher numbers were causing lags.
+for _ in range(300):
+    bg_x = randint(0, window_width)
+    bg_y = randint(0, window_height)
+
+    # randomly selecting size and colour of the ovals.
+    size = randint(1, 5)
+    color_chooser = randint(0, 4)
+
+    # Placing the ovals at the random points.
+    canvas_main.create_oval(bg_x, bg_y, bg_x + size, bg_y + size, fill=color[color_chooser])
+
+""" 
+The following things will be displayed when the game is launched.
+This will stay till enter is pressed to move on to start menu.
+"""
+# text showing the title of the game in large font.
+title_text = canvas_main.create_text(window_width / 2, window_height / 3 + 60,
+                                     fill="white", font=("OCR A Extended", 90),
+                                     text="INTO THE SPACE")
+
+# This will great the player using the name of the user of the pc.
+welcome_text = canvas_main.create_text(window_width / 2, window_height / 2 + 10,
                                        fill="white", font=("OCR A Extended", 40),
                                        text="Hello " + str(getlogin()))
 
-# Press any key to continue to start menu
-press_any_key = canvas_main.create_text(window_width / 2, window_height / 2 + 30,
-                                        fill="white", font=("OCR A Extended", 25),
-                                        text="Please press enter to continue")
+# This will show the text of press enter to continue to start menu.
+press_enter_to_continue = canvas_main.create_text(window_width / 2, window_height / 2 + 70,
+                                                  fill="white", font=("OCR A Extended", 25),
+                                                  text="Please press enter to continue")
+
+# Key binding the enter button so that player can access the start menu by clicking it.
+canvas_main.bind("<Return>", main_menu)
+canvas_main.focus_set()
 
 """
 The next sections are about loading, resizing and storing images to variables.
-Using the images, buttons are created and set the state to hidden to use later.
-Position of the buttons are fixed using the coords function
+Using the images, buttons are created and the state is set to hidden to use later.
+Position of the buttons are fixed using the coords function.
 """
 
-""" Start button """
+"Start button."
 start_org = Image.open("images/start.png")
 start_resized = start_org.resize((200, 75), Image.Resampling.LANCZOS)
 start_image = ImageTk.PhotoImage(start_resized)
@@ -845,25 +916,7 @@ start = canvas_main.create_window(window_width / 2, window_height / 2 - 200, win
 canvas_main.itemconfig(start, state="hidden")
 start_coords = canvas_main.coords(start)
 
-""" options button """
-options_org = Image.open("images/options.png")
-options_resized = options_org.resize((240, 75), Image.Resampling.LANCZOS)
-options_image = ImageTk.PhotoImage(options_resized)
-options_button = Button(window, image=options_image, bg="black", border=0, command=options_button_click)
-options = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=options_button)
-canvas_main.itemconfig(options, state="hidden")
-options_coords = canvas_main.coords(options)
-
-""" exit button """
-exit_org = Image.open("images/exit.png")
-exit_resized = exit_org.resize((200, 70), Image.Resampling.LANCZOS)
-exit_image = ImageTk.PhotoImage(exit_resized)
-exit_button = Button(window, image=exit_image, bg="black", border=0, command=window.destroy)
-exited = canvas_main.create_window(window_width / 2, window_height / 2 + 200, window=exit_button)
-canvas_main.itemconfig(exited, state="hidden")
-exit_coords = canvas_main.coords(exited)
-
-""" resume button """
+"Resume button."
 resume_org = Image.open("images/resume.png")
 resume_resized = resume_org.resize((244, 80), Image.Resampling.LANCZOS)
 resume_image = ImageTk.PhotoImage(resume_resized)
@@ -872,7 +925,7 @@ resume = canvas_main.create_window(window_width / 2, window_height / 2 - 300, wi
 canvas_main.itemconfig(resume, state="hidden")
 resume_coords = canvas_main.coords(resume)
 
-""" restart button """
+"Restart button."
 restart_org = Image.open("images/restart.png")
 restart_resized = restart_org.resize((244, 80), Image.Resampling.LANCZOS)
 restart_image = ImageTk.PhotoImage(restart_resized)
@@ -881,16 +934,7 @@ restarted = canvas_main.create_window(window_width / 2, window_height / 2 - 200,
 canvas_main.itemconfig(restarted, state="hidden")
 restart_coords = canvas_main.coords(restarted)
 
-""" leaderboard button """
-leaderboard_org = Image.open("images/leaderboard.png")
-leaderboard_resized = leaderboard_org.resize((474, 80), Image.Resampling.LANCZOS)
-leaderboard_image = ImageTk.PhotoImage(leaderboard_resized)
-leaderboard_button = Button(window, image=leaderboard_image, border=0, bg="black", command=leaderboard)
-leaderboards = canvas_main.create_window(window_width / 2, window_height / 2, window=leaderboard_button)
-canvas_main.itemconfig(leaderboards, state="hidden")
-leaderboard_coords = canvas_main.coords(leaderboards)
-
-""" save button """
+"Save button."
 save_org = Image.open("images/save.png")
 save_resized = save_org.resize((204, 80), Image.Resampling.LANCZOS)
 save_image = ImageTk.PhotoImage(save_resized)
@@ -899,7 +943,7 @@ save = canvas_main.create_window(window_width / 2, window_height / 2 - 50, windo
 canvas_main.itemconfig(save, state="hidden")
 save_coords = canvas_main.coords(save)
 
-""" load button """
+"Load button."
 load_org = Image.open("images/load.png")
 load_resized = load_org.resize((204, 80), Image.Resampling.LANCZOS)
 load_image = ImageTk.PhotoImage(load_resized)
@@ -908,7 +952,25 @@ load = canvas_main.create_window(window_width / 2, window_height / 2 - 100, wind
 canvas_main.itemconfig(load, state="hidden")
 load_coords = canvas_main.coords(load)
 
-""" cheat button """
+"Leaderboard button."
+leaderboard_org = Image.open("images/leaderboard.png")
+leaderboard_resized = leaderboard_org.resize((474, 80), Image.Resampling.LANCZOS)
+leaderboard_image = ImageTk.PhotoImage(leaderboard_resized)
+leaderboard_button = Button(window, image=leaderboard_image, border=0, bg="black", command=leaderboard)
+leaderboards = canvas_main.create_window(window_width / 2, window_height / 2, window=leaderboard_button)
+canvas_main.itemconfig(leaderboards, state="hidden")
+leaderboard_coords = canvas_main.coords(leaderboards)
+
+"Options button."
+options_org = Image.open("images/options.png")
+options_resized = options_org.resize((240, 75), Image.Resampling.LANCZOS)
+options_image = ImageTk.PhotoImage(options_resized)
+options_button = Button(window, image=options_image, bg="black", border=0, command=options_button_click)
+options = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=options_button)
+canvas_main.itemconfig(options, state="hidden")
+options_coords = canvas_main.coords(options)
+
+"Cheat button."
 cheat_org = Image.open("images/cheat.png")
 cheat_resized = cheat_org.resize((204, 75), Image.Resampling.LANCZOS)
 cheat_image = ImageTk.PhotoImage(cheat_resized)
@@ -917,7 +979,7 @@ cheats = canvas_main.create_window(window_width / 2, window_height / 2 - 50, win
 canvas_main.itemconfig(cheats, state="hidden")
 cheat_coords = canvas_main.coords(cheats)
 
-""" help button """
+"Help button."
 help_org = Image.open("images/help.png")
 help_resized = help_org.resize((204, 80), Image.Resampling.LANCZOS)
 help_image = ImageTk.PhotoImage(help_resized)
@@ -926,7 +988,7 @@ helps = canvas_main.create_window(window_width / 2, window_height / 2 + 50, wind
 canvas_main.itemconfig(helps, state="hidden")
 help_coords = canvas_main.coords(helps)
 
-""" back button """
+"Back button."
 back_org = Image.open("images/back.png")
 back_resized = back_org.resize((204, 75), Image.Resampling.LANCZOS)
 back_image = ImageTk.PhotoImage(back_resized)
@@ -934,7 +996,7 @@ back_button = Button(window, image=back_image, border=0, bg="black", command=bac
 backs = canvas_main.create_window(window_width / 2, window_height - window_height / 7, window=back_button)
 canvas_main.itemconfig(backs, state="hidden")
 
-""" back1 button """
+"Back1 button."
 back1_org = Image.open("images/back.png")
 back1_resized = back1_org.resize((204, 75), Image.Resampling.LANCZOS)
 back1_image = ImageTk.PhotoImage(back1_resized)
@@ -942,7 +1004,16 @@ back1_button = Button(window, image=back1_image, border=0, bg="black", command=b
 back1s = canvas_main.create_window(window_width / 2, window_height - window_height / 7, window=back1_button)
 canvas_main.itemconfig(back1s, state="hidden")
 
-""" Spaceship """
+"Exit button."
+exit_org = Image.open("images/exit.png")
+exit_resized = exit_org.resize((200, 70), Image.Resampling.LANCZOS)
+exit_image = ImageTk.PhotoImage(exit_resized)
+exit_button = Button(window, image=exit_image, bg="black", border=0, command=window.destroy)
+exited = canvas_main.create_window(window_width / 2, window_height / 2 + 200, window=exit_button)
+canvas_main.itemconfig(exited, state="hidden")
+exit_coords = canvas_main.coords(exited)
+
+"Spaceship."
 spaceship_org = Image.open("images/spaceship_image.png")
 spaceship_resized = spaceship_org.resize((100, 100), Image.Resampling.LANCZOS)
 spaceship_image = ImageTk.PhotoImage(spaceship_resized)
@@ -951,14 +1022,12 @@ spaceship = canvas_main.create_image(window_width / 2 - 40,
                                      image=spaceship_image, anchor="nw")
 canvas_main.itemconfig(spaceship, state="hidden")
 
-""" List data structure to store asteroid images """
+"List data structure to store asteroid images."
 asteroid_image = []
 for m in range(1, 5):
     asteroid_org = Image.open("images/asteroid_" + str(m) + ".png")
     asteroid_resized = asteroid_org.resize((120, 120), Image.Resampling.LANCZOS)
     asteroid_image.append(ImageTk.PhotoImage(asteroid_resized))
 
-canvas_main.bind("<Return>", main_menu)
-canvas_main.focus_set()
-
+# Keeps looping the gui till closed manually.
 window.mainloop()
