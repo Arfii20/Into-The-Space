@@ -1,15 +1,17 @@
-# Coursework 2 of COMP16321
+# Coursework 2 of COMP16321 by Arefin Ahammed, p28320aa
 
 """
-*** The screen resolution is 1440x900
+The screen resolution is 1440x900
 
-* This is a classic asteroid game where the player needs to avoid hitting the asteroids to survive.
-* The difficulty increases at certain scores.
-* The speed of the asteroids will increase making the game harder and harder at each level.
+This is a classic asteroid game where the player needs to avoid hitting the asteroids to survive.
+The difficulty increases at certain scores and there is only one life.
+The speed of the asteroids will increase making the game harder and harder at each level.
+There are "save", "load", "pause" and "restart" options while playing game.
+There is a leaderboard which reflects the top 10 scores in the game.
+4 different cheat codes have been added for people who want to cheat.
 """
 
 # Image sources
-
 # game_icon.ico source: https://www.freeiconspng.com/img/17270
 # spaceship_image.png source: https://www.pngkey.com/detail/u2q8a9t4r5y3a9r5_spaceship-png-file-spaceship-png/
 # asteroid_1.png source: https://www.pngwing.com/en/free-png-yoygi
@@ -33,15 +35,15 @@
 # help.png source: http://pixelartmaker.com/art/e423fd17591bcaa
 
 from tkinter import Tk, Canvas, Button, Label, Frame, ttk
-from tkinter.font import Font
-from PIL import Image, ImageTk
-from random import randint, shuffle
-from os import getlogin
-from math import sqrt, pow
-from time import sleep
 from pickle import dump, load as ld
+from random import randint, shuffle
 from webbrowser import open as opn
+from tkinter.font import Font
 from platform import system
+from math import sqrt, pow
+from os import getlogin
+from time import sleep
+from PIL import Image, ImageTk
 
 
 def configure_window():
@@ -52,6 +54,7 @@ def configure_window():
     """
     window.title("Into The Space")
 
+    # If the system is windows, ico icon is selected. Otherwise, xbm is selected.
     if system() == "Windows":
         window.iconbitmap("images/game_icon.ico")
     else:
@@ -517,16 +520,20 @@ def leaderboard():
     # Sorts the list in descending order.
     words.sort(reverse=True)
 
+    # Stores the sorted scores in the leaderboardsorted file.
     file_sorted = open("leaderboardsorted.txt", "w")
     for i in words:
         file_sorted.write(str(i) + "\n")
     file_sorted.close()
 
+    # Reads from the leaderboardsorted file to display the leaderboard.
     file = open("leaderboardsorted.txt", "r")
     lines = file.readlines()
+    # If the scores file is empty, this line is shown.
     if len(lines) == 0:
         Label(leaderboard_frame, text="Nothing to show here\n", font=("OCR A Extended", 25),
               bg="black", fg="white").pack(anchor="w", padx=50)
+    # Otherwise, Top 10 scores are displayed
     else:
         count = 1
         for idx, val in enumerate(lines, start=1):
@@ -553,11 +560,12 @@ def options_button_click():
     canvas_options = Canvas(secondary_frame, bg="black", border=0)
     canvas_options.pack(side="left", fill="both", expand=1)
 
+    # The text displays whichever button was clicked and which keybind was selected.
     selected_keybind = canvas_options.create_text(window_width / 2, window_height / 2 + 80, fill="white",
                                                   font=("OCR A Extended", 20), justify="center")
     canvas_options.itemconfig(selected_keybind, state="hidden")
 
-    # Adding 300 starts to reduce lag.
+    # Adding 300 starts to the new canvas.
     for _ in range(300):
         optionsbg_x = randint(0, window_width)
         optionsbg_y = randint(0, window_height)
@@ -578,6 +586,7 @@ def options_button_click():
     canvas_main.itemconfig(restarted, state="hidden")
     hidden_buttons()
 
+    # Shows the options menu buttons.
     canvas_main.itemconfig(cheats, state="normal")
     canvas_main.itemconfig(helps, state="normal")
     canvas_main.itemconfig(key_binds, state="normal")
@@ -590,12 +599,12 @@ def cheat_codes():
     Also mentions what the boss key is.
     """
     global options_text
+    # This text is displayed when the cheat code button is clicked.
     explanation = "Reset asteroid speed to default:\nShift + z \n\n" \
                   "Reduce asteroid speed by 1:\nShift + x \n\n" \
                   "Increase score by 500:\nShift + c \n\n" \
                   "God Mode (Invulnerability):\nShift + v\n\n\n" \
                   "BOSS KEY: <TAB>"
-
     options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
 
@@ -614,6 +623,7 @@ def key_binds_options():
     There is also a back button which hides the current buttons and takes back to options menu.
     """
     global options_text
+    # This text is displayed when the keybinds button is clicked
     explanation = "You can choose any of the two below key-binds\n" \
                   "to move the spaceship"
 
@@ -656,13 +666,13 @@ def help_player():
     Explains to the player the mechanism of the game.
     """
     global options_text
+    # This text is displayed when the help button is clicked
     explanation = "The player has to avoid the asteroids to earn score and survive\n\n" \
                   "The speed and level will increase every 100 scores\n\n" \
                   "Speed will keep on increasing till game over\n\n" \
                   "The game is over if the player crashes into any asteroid\n\n" \
                   "The player can use cheats if he wants to but is discouraged\n\n\n" \
                   "BOSS KEY: <TAB>"
-
     options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
 
@@ -728,6 +738,7 @@ def save_game():
     """
     global score, asteroid_speed, spaceship_pos, level_number
 
+    # Dumps the score, speed, level number and spaceship position to a dat file.
     dump(score, open("save/score.bat", "wb"))
     dump(asteroid_speed, open("save/asteroid_speed.bat", "wb"))
     dump(level_number, open("save/level.bat", "wb"))
@@ -742,17 +753,18 @@ def load_game():
     It loads everything apart from the asteroids from last session.
     The asteroids are newly formed after this load.
     """
-    global score, asteroid_speed, restart_flag, pause_game, game_over, level_number, scoreText, level
+    global score, asteroid_speed, restart_flag, pause_game, game_over, level_number
 
+    # Saves the current score before reloading.
     if score != 0:
         file = open("leaderboard.txt", "a")
         file.write("\n" + str(score))
         file.close()
 
+    # Loads the saved values from the bat files.
     score = ld(open("save/score.bat", "rb"))
     asteroid_speed = ld(open("save/asteroid_speed.bat", "rb"))
     level_number = ld(open("save/level.bat", "rb"))
-
     ship_pos = ld(open("save/spaceship_pos.bat", "rb"))
     canvas_main.coords(spaceship, ship_pos[0], ship_pos[1])
 
@@ -764,6 +776,7 @@ def load_game():
     canvas_main.itemconfig(load, state="hidden")
     canvas_main.itemconfig(level, text="")
 
+    # If not loaded from main menu, deletes
     if pause_game or game_over:
         for j in asteroid:
             canvas_main.delete(j)
@@ -783,29 +796,34 @@ def asteroids_and_collision():
     global game_over_text, pause_game, game_over, score, \
         asteroid_speed, spaceship_pos, level_number, invulnerable
 
+    # This loop only happens if pause flag is false.
     while not pause_game:
         y = [asteroid_speed] * 4
+        # For 4 asteroids, the for-loop loops 4 times.
         for i in range(4):
             pos = canvas_main.coords(asteroid[i])
+            # When the asteroid goes out of the window height, the asteroids are repositioned
             if pos[1] >= window_height:
                 canvas_main.coords(asteroid[i], randint(50, window_width - 110), randint(-500, 0))
                 score += 10
                 score_txt = "Score: " + str(score)
                 canvas_main.itemconfig(scoreText, text=score_txt)
                 canvas_main.tag_raise(scoreText)
+                # Every hundrend score, level and asteroid speed increases.
                 if score != 0 and score % 100 == 0:
                     asteroid_speed += 1
                     level_number += 1
                     canvas_main.itemconfig(level, state="normal",
                                            text=("Level " + str(level_number) + ": Speed increased"))
                     canvas_main.itemconfig(cheat, state="hidden")
+                # Level and cheat activated texts are removed when the score reaches 40s.
                 elif (score - 40) % 100 == 0:
                     canvas_main.itemconfig(level, state="hidden")
                     canvas_main.itemconfig(cheat, state="hidden")
 
+            # Position of the asteroids and the spaceship.
             asteroid_pos = canvas_main.coords(asteroid[i])
             spaceship_pos = canvas_main.coords(spaceship)
-
             spaceship_touches_sides()
 
             if not invulnerable:
@@ -824,6 +842,7 @@ def asteroids_and_collision():
                     canvas_main.itemconfig(scoreText, state="hidden")
                     canvas_main.coords(load, window_width / 2, window_height / 2 - 100)
 
+                    # Saves the game when the score is not 0
                     if score != 0:
                         file = open("leaderboard.txt", "a")
                         file.write("\n" + str(score))
@@ -831,7 +850,9 @@ def asteroids_and_collision():
 
                     canvas_main.after(1000, game_over_buttons)
                     break
+            # Moves the asteroids down every time.
             canvas_main.move(asteroid[i], 0, y[i])
+        # As long as the game is not over, loops back after 0.001 seconds.
         if not game_over:
             sleep(0.001)
             window.update()
@@ -902,6 +923,7 @@ def main_game():
     asteroids_and_collision()
 
 
+# Creates the main window.
 window = Tk()
 
 # Setting the width and height of the main window.
@@ -956,8 +978,8 @@ game_over_score = canvas_main.create_text(window_width / 2, window_height / 5, f
 canvas_main.itemconfig(game_over_score, state="hidden")
 
 # This will show the cheat message when any cheat is activated. Modified later for different cheats.
-cheat = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
-                                font=("OCR A Extended", 20))
+cheat = canvas_main.create_text(window_width / 2, window_height / 2,
+                                fill="white", font=("OCR A Extended", 20))
 canvas_main.itemconfig(cheat, state="hidden")
 
 # When the game is saved, this will be written at the bottom right.
