@@ -45,6 +45,8 @@ from os import getlogin
 from time import sleep
 from PIL import Image, ImageTk
 
+from collections import OrderedDict
+
 
 def configure_window():
     """
@@ -435,7 +437,7 @@ def restart_game():
     # The game only adds the score to leaderboard file iff the score unequal zero
     if score != 0:
         file = open("leaderboard.txt", "a")
-        file.write("\n" + str(score))
+        file.write(str(score) + "\n")
         file.close()
 
     canvas_main.itemconfig(level, text="Level " + str(level_number) + "\n\nDodge the Asteroids")
@@ -484,13 +486,8 @@ def leaderboard():
         # Selects a random size and colour of the stars
         options_size = randint(1, 5)
         options_color_chooser = randint(0, 4)
-
         canvas_leaderboard.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
                                        fill=color[options_color_chooser])
-
-    # Creating the main leaderboard frame.
-    leaderboard_frame = Frame(canvas_leaderboard, width=window_width, height=window_height, bg="black", border=0)
-    canvas_leaderboard.create_window((0, 0), window=leaderboard_frame, anchor="nw")
 
     # Hides the main menu buttons.
     canvas_main.itemconfig(main_image, state="hidden")
@@ -503,8 +500,8 @@ def leaderboard():
     hidden_buttons()
 
     # Displays the leaderboard text on top left
-    Label(leaderboard_frame, text="Leaderboard:\n", font=("OCR A Extended", 35),
-          bg="black", fg="white").pack(padx=50, pady=(40, 0))
+    canvas_leaderboard.create_text(60, 60, fill="white", text="Leaderboard:",
+                                   font=("OCR A Extended", 40), anchor="w")
 
     # Makes a list with the scores stored in the leaderboard.txt file.
     unsorted = open("leaderboard.txt", "r")
@@ -531,16 +528,20 @@ def leaderboard():
     lines = file.readlines()
     # If the scores file is empty, this line is shown.
     if len(lines) == 0:
-        Label(leaderboard_frame, text="Nothing to show here\n", font=("OCR A Extended", 25),
-              bg="black", fg="white").pack(anchor="w", padx=50)
+        pass
+        canvas_leaderboard.create_text(window_width / 2, window_height / 2, fill="white",
+                                       font=("OCR A Extended", 25), text="Nothing to show here", justify="left")
     # Otherwise, Top 10 scores are displayed
     else:
         count = 1
+        list1 = []
         for idx, val in enumerate(lines, start=1):
             if count <= 10:
-                Label(leaderboard_frame, text=(str(idx) + ". " + str(val)), bg="black", fg="white",
-                      font=("OCR A Extended", 20)).pack(anchor="w", padx=50)
+                list1.append(str(idx) + ". " + str(val) + "\n")
                 count += 1
+        list1 = "".join(list1)
+        canvas_leaderboard.create_text(80, 120, fill="white",
+                                       font=("OCR A Extended", 25), text=list1, justify="left", anchor="nw")
     file.close()
 
     canvas_main.itemconfig(backs, state="normal")
@@ -758,7 +759,7 @@ def load_game():
     # Saves the current score before reloading.
     if score != 0:
         file = open("leaderboard.txt", "a")
-        file.write("\n" + str(score))
+        file.write(str(score) + "\n")
         file.close()
 
     # Loads the saved values from the bat files.
@@ -845,7 +846,7 @@ def asteroids_and_collision():
                     # Saves the game when the score is not 0
                     if score != 0:
                         file = open("leaderboard.txt", "a")
-                        file.write("\n" + str(score))
+                        file.write(str(score) + "\n")
                         file.close()
 
                     canvas_main.after(1000, game_over_buttons)
