@@ -34,7 +34,7 @@ There is a leaderboard which reflects the top 10 scores in the game.
 # cheat.png source: http://pixelartmaker.com/art/184effceebac6a0
 # help.png source: http://pixelartmaker.com/art/e423fd17591bcaa
 
-from tkinter import Tk, Canvas, Button, Label, Frame, ttk
+from tkinter import Tk, Canvas, Button, Frame, ttk
 from pickle import dump, load as ld
 from random import randint, shuffle
 from webbrowser import open as opn
@@ -44,8 +44,7 @@ from math import sqrt, pow
 from os import getlogin
 from time import sleep
 from PIL import Image, ImageTk
-
-from collections import OrderedDict
+import sqlite3
 
 
 def configure_window():
@@ -336,7 +335,52 @@ def game_over_buttons():
     canvas_main.delete(game_over_text)
 
 
-def main_menu(_):
+def ask_name_choice(_):
+    global canvas_options, name_change_text
+    # Unbinds the enter button from first screen.
+    canvas_main.unbind("<Return>")
+
+    secondary_frame.pack(fill="both", expand=1)
+
+    # Creating a canvas for the leaderboard.
+    canvas_options = Canvas(secondary_frame, bg="black", border=0)
+    canvas_options.pack(side="left", fill="both", expand=1)
+
+    # Adding 300 starts to the new canvas.
+    for _ in range(300):
+        optionsbg_x = randint(0, window_width)
+        optionsbg_y = randint(0, window_height)
+
+        options_size = randint(1, 5)
+        options_color_chooser = randint(0, 4)
+
+        canvas_options.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
+                                   fill=color[options_color_chooser])
+
+    # level_number text that will be shown upper mid upon each level increment.
+    name_change_text = canvas_options.create_text(window_width / 2, window_height / 2 - 100, fill="white",
+                                               font=("OCR A Extended", 25), justify="center")
+    canvas_options.itemconfig(name_change_text, text="Do you want to change your name?\n"
+                                                  "The default is your PC's user name",
+                           state="normal")
+    canvas_main.itemconfig(use_default, state="normal")
+    canvas_main.itemconfig(change_name, state="normal")
+
+
+def use_default_name():
+    # global secondary_frame, canvas_options
+    # print(secondary_frame.winfo_children())
+    # for widget in secondary_frame.winfo_children():
+    #     widget.destroy()
+    #
+    # main_menu()
+    pass
+
+
+def change_name():
+    pass
+
+def main_menu():
     """
     This function removes the welcome screen and displays all the buttons.
     Takes an event as an argument and that is why used "_".
@@ -345,9 +389,6 @@ def main_menu(_):
     canvas_main.delete(press_enter_to_continue)
     canvas_main.delete(welcome_text)
     canvas_main.delete(title_text)
-
-    # Unbinds the enter button from first screen.
-    canvas_main.unbind("<Return>")
 
     # Add buttons to main menu of canvas
     canvas_main.itemconfig(start, state="normal")
@@ -427,18 +468,17 @@ def restart_game():
     launches the main game function which starts the game from beginning.
     """
     global restart_flag, pause_game, score, asteroid_speed, level_number
+
+    # The game only adds the score to leaderboard file iff the score unequal zero
+    if score != 0:
+        save_leaderboard(score)
+
     # Sets the following variables to default
     pause_game = False
     restart_flag = True
     asteroid_speed = 4
     level_number = 1
     score = 0
-
-    # The game only adds the score to leaderboard file iff the score unequal zero
-    if score != 0:
-        file = open("leaderboard.txt", "a")
-        file.write(str(score) + "\n")
-        file.close()
 
     canvas_main.itemconfig(level, text="Level " + str(level_number) + "\n\nDodge the Asteroids")
     canvas_main.coords(spaceship, window_width / 2 - 40, window_height - window_height / 6)
@@ -454,6 +494,49 @@ def restart_game():
         canvas_main.delete(j)
 
     main_game()
+
+
+def create_database_table():
+    conn = sqlite3.connect("leaderboard_database.db")
+    curs = conn.cursor()
+    curs.execute("CREATE TABLE IF NOT EXISTS leaderboard (Name text, Score integer)")
+    conn.commit()
+    conn.close()
+
+
+def save_leaderboard(score):
+
+    conn = sqlite3.connect("leaderboard_database.db")
+
+    # create cursor
+    curs = conn.cursor()
+
+    # curs.execute("CREATE TABLE leaderboard (Name text, Score integer)")
+    curs.execute("INSERT INTO leaderboard VALUES (:Name, :Score)",
+                 {
+                    "Name": getlogin(),
+                    "Score": score
+                 }
+                 )
+    conn.commit()
+    conn.close()
+
+
+def display_leaderboard():
+
+    conn = sqlite3.connect("leaderboard_database.db")
+
+    # create cursor
+    curs = conn.cursor()
+
+    # curs.execute("CREATE TABLE leaderboard (Name text, Score integer)")
+    curs.execute("SELECT *, oid FROM leaderboard ORDER BY Score DESC")
+    leaders = curs.fetchall()
+
+    conn.commit()
+    conn.close()
+
+    return leaders
 
 
 def leaderboard():
@@ -503,46 +586,58 @@ def leaderboard():
     canvas_leaderboard.create_text(60, 60, fill="white", text="Leaderboard:",
                                    font=("OCR A Extended", 40), anchor="w")
 
-    # Makes a list with the scores stored in the leaderboard.txt file.
-    unsorted = open("leaderboard.txt", "r")
-    words = unsorted.readlines()
-    for idx, val in enumerate(words):
-        if "\n" in val:
-            words[idx] = val[0:len(val) - 1]
-    if "" in words:
-        words.remove("")
-    words = [int(x) for x in words]
-    unsorted.close()
+    leaders = display_leaderboard()
+    print_leaders = ""
+    for idx, val in enumerate(leaders, start=1):
+        print_leaders += str(idx) + ". " + str(val[0]) + " " + str(val[1]) + "\n\n"
 
-    # Sorts the list in descending order.
-    words.sort(reverse=True)
-
-    # Stores the sorted scores in the leaderboardsorted file.
-    file_sorted = open("leaderboardsorted.txt", "w")
-    for i in words:
-        file_sorted.write(str(i) + "\n")
-    file_sorted.close()
-
-    # Reads from the leaderboardsorted file to display the leaderboard.
-    file = open("leaderboardsorted.txt", "r")
-    lines = file.readlines()
-    # If the scores file is empty, this line is shown.
-    if len(lines) == 0:
-        pass
+    if print_leaders == "":
         canvas_leaderboard.create_text(window_width / 2, window_height / 2, fill="white",
                                        font=("OCR A Extended", 25), text="Nothing to show here", justify="left")
-    # Otherwise, Top 10 scores are displayed
     else:
-        count = 1
-        list1 = []
-        for idx, val in enumerate(lines, start=1):
-            if count <= 10:
-                list1.append(str(idx) + ". " + str(val) + "\n")
-                count += 1
-        list1 = "".join(list1)
-        canvas_leaderboard.create_text(80, 120, fill="white",
-                                       font=("OCR A Extended", 25), text=list1, justify="left", anchor="nw")
-    file.close()
+        canvas_leaderboard.create_text(80, 120, fill="white", font=("OCR A Extended", 25),
+                                      text=print_leaders, justify="left", anchor="nw")
+
+    # # Makes a list with the scores stored in the leaderboard.txt file.
+    # unsorted = open("leaderboard.txt", "r")
+    # words = unsorted.readlines()
+    # for idx, val in enumerate(words):
+    #     if "\n" in val:
+    #         words[idx] = val[0:len(val) - 1]
+    # if "" in words:
+    #     words.remove("")
+    # words = [int(x) for x in words]
+    # unsorted.close()
+    #
+    # # Sorts the list in descending order.
+    # words.sort(reverse=True)
+    #
+    # # Stores the sorted scores in the leaderboardsorted file.
+    # file_sorted = open("leaderboardsorted.txt", "w")
+    # for i in words:
+    #     file_sorted.write(str(i) + "\n")
+    # file_sorted.close()
+    #
+    # # Reads from the leaderboardsorted file to display the leaderboard.
+    # file = open("leaderboardsorted.txt", "r")
+    # lines = file.readlines()
+    # # If the scores file is empty, this line is shown.
+    # if len(lines) == 0:
+    #     pass
+    #     canvas_leaderboard.create_text(window_width / 2, window_height / 2, fill="white",
+    #                                    font=("OCR A Extended", 25), text="Nothing to show here", justify="left")
+    # # Otherwise, Top 10 scores are displayed
+    # else:
+    #     count = 1
+    #     list1 = []
+    #     for idx, val in enumerate(lines, start=1):
+    #         if count <= 10:
+    #             list1.append(str(idx) + ". " + str(val) + "\n")
+    #             count += 1
+    #     list1 = "".join(list1)
+    #     canvas_leaderboard.create_text(80, 120, fill="white",
+    #                                    font=("OCR A Extended", 25), text=list1, justify="left", anchor="nw")
+    # file.close()
 
     canvas_main.itemconfig(backs, state="normal")
 
@@ -553,18 +648,13 @@ def options_button_click():
     When clicked, they call the respective functions.
     For this screen, a new frame, canvas and background stars are created.
     """
-    global canvas_options, selected_keybind
+    global canvas_options
     # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
 
     # Creating a canvas for the leaderboard.
     canvas_options = Canvas(secondary_frame, bg="black", border=0)
     canvas_options.pack(side="left", fill="both", expand=1)
-
-    # The text displays whichever button was clicked and which keybind was selected.
-    selected_keybind = canvas_options.create_text(window_width / 2, window_height / 2 + 80, fill="white",
-                                                  font=("OCR A Extended", 20), justify="center")
-    canvas_options.itemconfig(selected_keybind, state="hidden")
 
     # Adding 300 starts to the new canvas.
     for _ in range(300):
@@ -623,13 +713,18 @@ def key_binds_options():
     A text is displayed which describes what happens when clicked.
     There is also a back button which hides the current buttons and takes back to options menu.
     """
-    global options_text
+    global options_text, selected_keybind
     # This text is displayed when the keybinds button is clicked
     explanation = "You can choose any of the two below key-binds\n" \
                   "to move the spaceship"
 
     options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 50, fill="white",
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
+
+    # The text displays whichever button was clicked and which keybind was selected.
+    selected_keybind = canvas_options.create_text(window_width / 2, window_height / 2 + 80, fill="white",
+                                                  font=("OCR A Extended", 20), justify="center")
+    canvas_options.itemconfig(selected_keybind, state="hidden")
 
     canvas_main.itemconfig(cheats, state="hidden")
     canvas_main.itemconfig(key_binds, state="hidden")
@@ -758,9 +853,7 @@ def load_game():
 
     # Saves the current score before reloading.
     if score != 0:
-        file = open("leaderboard.txt", "a")
-        file.write(str(score) + "\n")
-        file.close()
+        save_leaderboard(score)
 
     # Loads the saved values from the bat files.
     score = ld(open("save/score.bat", "rb"))
@@ -810,7 +903,7 @@ def asteroids_and_collision():
                 score_txt = "Score: " + str(score)
                 canvas_main.itemconfig(scoreText, text=score_txt)
                 canvas_main.tag_raise(scoreText)
-                # Every hundrend score, level and asteroid speed increases.
+                # Every hundred score, level and asteroid speed increases.
                 if score != 0 and score % 100 == 0:
                     asteroid_speed += 1
                     level_number += 1
@@ -829,7 +922,7 @@ def asteroids_and_collision():
 
             if not invulnerable:
                 # Collision detection system.
-                game_over = 110 > sqrt(pow(asteroid_pos[0] - spaceship_pos[0], 2)
+                game_over = 105 > sqrt(pow(asteroid_pos[0] + 10 - spaceship_pos[0], 2)
                                        + pow(asteroid_pos[1] - spaceship_pos[1], 2))
 
                 # When game is over, the following actions are taken
@@ -845,9 +938,11 @@ def asteroids_and_collision():
 
                     # Saves the game when the score is not 0
                     if score != 0:
-                        file = open("leaderboard.txt", "a")
-                        file.write(str(score) + "\n")
-                        file.close()
+                        # file = open("leaderboard.txt", "a")
+                        # file.write(str(score) + "\n")
+                        # file.close()
+                        # connect to the database
+                        save_leaderboard(score)
 
                     canvas_main.after(1000, game_over_buttons)
                     break
@@ -944,6 +1039,7 @@ spaceship_pos = None
 options_text = None
 canvas_options = None
 selected_keybind = None
+name = getlogin()
 asteroid = []
 scoreText = ""
 game_over_text = ""
@@ -966,6 +1062,9 @@ main_menu_image = ImageTk.PhotoImage(Image.open("images/main.png"))
 main_image = canvas_main.create_image(window_width / 2, window_height / 2,
                                       image=main_menu_image, anchor="center")
 canvas_main.itemconfig(main_image, state="normal")
+
+"Creating the leaderboard database if it does not exist"
+create_database_table()
 
 """
 The following are different texts that will be displayed at certain point.
@@ -1033,7 +1132,7 @@ press_enter_to_continue = canvas_main.create_text(window_width / 2, window_heigh
                                                   text="Please press enter to continue")
 
 # Key binding the enter button so that player can access the start menu by clicking it.
-canvas_main.bind("<Return>", main_menu)
+canvas_main.bind("<Return>", ask_name_choice)
 canvas_main.focus_set()
 
 """
@@ -1041,6 +1140,21 @@ The next sections are about loading, resizing and storing images to variables.
 Using the images, buttons are created and the state is set to hidden to use later.
 Position of the buttons are fixed using the coords function.
 """
+"Use default button."
+use_default_org = Image.open("images/use_default.png")
+use_default_resized = use_default_org.resize((400, 75))
+use_default_image = ImageTk.PhotoImage(use_default_resized)
+use_default_button = Button(window, image=use_default_image, bg="black", border=0, command=use_default_name)
+use_default = canvas_main.create_window(window_width / 2, window_height / 2, window=use_default_button)
+canvas_main.itemconfig(use_default, state="hidden")
+
+"Change name button."
+change_name_org = Image.open("images/change_name.png")
+change_name_resized = change_name_org.resize((400, 75))
+change_name_image = ImageTk.PhotoImage(change_name_resized)
+change_name_button = Button(window, image=change_name_image, bg="black", border=0, command=change_name)
+change_name = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=change_name_button)
+canvas_main.itemconfig(change_name, state="hidden")
 
 "Start button."
 start_org = Image.open("images/start.png")
