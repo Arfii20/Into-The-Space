@@ -34,7 +34,7 @@ There is a leaderboard which reflects the top 10 scores in the game.
 # cheat.png source: http://pixelartmaker.com/art/184effceebac6a0
 # help.png source: http://pixelartmaker.com/art/e423fd17591bcaa
 
-from tkinter import Tk, Canvas, Button, Frame, ttk
+from tkinter import Tk, Canvas, Button, Frame, ttk, Entry
 from pickle import dump, load as ld
 from random import randint, shuffle
 from webbrowser import open as opn
@@ -336,60 +336,56 @@ def game_over_buttons():
 
 
 def ask_name_choice(_):
-    global canvas_options, name_change_text
-    # Unbinds the enter button from first screen.
     canvas_main.unbind("<Return>")
+    canvas_main.delete(press_enter_to_continue)
+    canvas_main.delete(welcome_text)
+    canvas_main.delete(title_text)
 
-    secondary_frame.pack(fill="both", expand=1)
-
-    # Creating a canvas for the leaderboard.
-    canvas_options = Canvas(secondary_frame, bg="black", border=0)
-    canvas_options.pack(side="left", fill="both", expand=1)
-
-    # Adding 300 starts to the new canvas.
-    for _ in range(300):
-        optionsbg_x = randint(0, window_width)
-        optionsbg_y = randint(0, window_height)
-
-        options_size = randint(1, 5)
-        options_color_chooser = randint(0, 4)
-
-        canvas_options.create_oval(optionsbg_x, optionsbg_y, optionsbg_x + options_size, optionsbg_y + options_size,
-                                   fill=color[options_color_chooser])
-
-    # level_number text that will be shown upper mid upon each level increment.
-    name_change_text = canvas_options.create_text(window_width / 2, window_height / 2 - 100, fill="white",
-                                               font=("OCR A Extended", 25), justify="center")
-    canvas_options.itemconfig(name_change_text, text="Do you want to change your name?\n"
+    canvas_main.itemconfig(name_change_text, text="Do you want to change your name?\n"
                                                   "The default is your PC's user name",
                            state="normal")
     canvas_main.itemconfig(use_default, state="normal")
     canvas_main.itemconfig(change_name, state="normal")
 
-
 def use_default_name():
-    # global secondary_frame, canvas_options
-    # print(secondary_frame.winfo_children())
-    # for widget in secondary_frame.winfo_children():
-    #     widget.destroy()
-    #
-    # main_menu()
-    pass
+    canvas_main.delete(name_change_text)
+    canvas_main.delete(use_default)
+    canvas_main.delete(change_name)
+    main_menu()
+
+
+def entry_clear(_):
+    enter_name_box.delete(0, "end")
 
 
 def change_name():
-    pass
+    global entry_box, enter_name_box
+    canvas_main.delete(name_change_text)
+    canvas_main.delete(use_default)
+    canvas_main.delete(change_name)
+
+    # Create Entry box
+    enter_name_box = Entry(window, font=("OCR A Extended", 25), width=25, fg="black", bd=0)
+    enter_name_box.insert(0, "Enter Name")
+
+    enter_name_box.bind("<Button-1>", entry_clear)
+    entry_box = canvas_main.create_window(window_width / 2, window_height / 2, window=enter_name_box)
+    canvas_main.itemconfig(done, state="normal")
+
+def done_button_click():
+    global name
+    name = enter_name_box.get()
+    print(name)
+    canvas_main.delete(entry_box)
+    canvas_main.delete(done)
+    main_menu()
+
 
 def main_menu():
     """
     This function removes the welcome screen and displays all the buttons.
     Takes an event as an argument and that is why used "_".
     """
-    # Deleting the text.
-    canvas_main.delete(press_enter_to_continue)
-    canvas_main.delete(welcome_text)
-    canvas_main.delete(title_text)
-
     # Add buttons to main menu of canvas
     canvas_main.itemconfig(start, state="normal")
     canvas_main.itemconfig(load, state="normal")
@@ -471,7 +467,7 @@ def restart_game():
 
     # The game only adds the score to leaderboard file iff the score unequal zero
     if score != 0:
-        save_leaderboard(score)
+        save_leaderboard(name, score)
 
     # Sets the following variables to default
     pause_game = False
@@ -504,7 +500,7 @@ def create_database_table():
     conn.close()
 
 
-def save_leaderboard(score):
+def save_leaderboard(name, score):
 
     conn = sqlite3.connect("leaderboard_database.db")
 
@@ -514,7 +510,7 @@ def save_leaderboard(score):
     # curs.execute("CREATE TABLE leaderboard (Name text, Score integer)")
     curs.execute("INSERT INTO leaderboard VALUES (:Name, :Score)",
                  {
-                    "Name": getlogin(),
+                    "Name": name,
                     "Score": score
                  }
                  )
@@ -589,7 +585,7 @@ def leaderboard():
     leaders = display_leaderboard()
     print_leaders = ""
     for idx, val in enumerate(leaders, start=1):
-        print_leaders += str(idx) + ". " + str(val[0]) + " " + str(val[1]) + "\n\n"
+        print_leaders += str(idx) + ". " + str(val[0]) + " - " + str(val[1]) + "\n\n"
 
     if print_leaders == "":
         canvas_leaderboard.create_text(window_width / 2, window_height / 2, fill="white",
@@ -853,7 +849,7 @@ def load_game():
 
     # Saves the current score before reloading.
     if score != 0:
-        save_leaderboard(score)
+        save_leaderboard(name, score)
 
     # Loads the saved values from the bat files.
     score = ld(open("save/score.bat", "rb"))
@@ -942,7 +938,8 @@ def asteroids_and_collision():
                         # file.write(str(score) + "\n")
                         # file.close()
                         # connect to the database
-                        save_leaderboard(score)
+                        print(name)
+                        save_leaderboard(name, score)
 
                     canvas_main.after(1000, game_over_buttons)
                     break
@@ -1092,6 +1089,11 @@ level = canvas_main.create_text(window_width / 2, window_height / 7, fill="white
                                 font=("OCR A Extended", 25), justify="center")
 canvas_main.itemconfig(level, state="hidden")
 
+# level_number text that will be shown upper mid upon each level increment.
+name_change_text = canvas_main.create_text(window_width / 2, window_height / 2 - 100, fill="white",
+                                           font=("OCR A Extended", 25), justify="center")
+canvas_main.itemconfig(name_change_text, state="hidden")
+
 """
 This will add a background of stars to the whole game.
 For this, canvas shapes, ovals, are used of random sizes at random places.
@@ -1124,7 +1126,7 @@ title_text = canvas_main.create_text(window_width / 2, window_height / 3 + 60,
 # This will great the player using the name of the user of the pc.
 welcome_text = canvas_main.create_text(window_width / 2, window_height / 2 + 10,
                                        fill="white", font=("OCR A Extended", 40),
-                                       text="Hello " + str(getlogin()))
+                                       text="Hello")
 
 # This will show the text of press enter to continue to start menu.
 press_enter_to_continue = canvas_main.create_text(window_width / 2, window_height / 2 + 70,
@@ -1155,6 +1157,14 @@ change_name_image = ImageTk.PhotoImage(change_name_resized)
 change_name_button = Button(window, image=change_name_image, bg="black", border=0, command=change_name)
 change_name = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=change_name_button)
 canvas_main.itemconfig(change_name, state="hidden")
+
+"Done button."
+done_org = Image.open("images/done.png")
+done_resized = done_org.resize((200, 75))
+done_image = ImageTk.PhotoImage(done_resized)
+done_button = Button(window, image=done_image, bg="black", border=0, command=done_button_click)
+done = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=done_button)
+canvas_main.itemconfig(done, state="hidden")
 
 "Start button."
 start_org = Image.open("images/start.png")
