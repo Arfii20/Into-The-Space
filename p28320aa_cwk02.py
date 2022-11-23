@@ -81,6 +81,7 @@ def configure_window():
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 
+# Functions about binding and unbinding.
 def bind_keys():
     """
     Binds the movement keys of the spaceship.
@@ -200,6 +201,37 @@ def spaceship_touches_sides():
             canvas_main.bind("<w>", move_spaceship_up)
 
 
+def boss_key(_):
+    """
+    When tab is clicked, it opens the boss.css file.
+    It also pauses the game and shows all the buttons.
+    Takes an event as an argument and that is why used "_".
+    """
+    global pause_game, game_over
+    opn("boss.css")
+
+    pause_game = True
+
+    # Does not show the resume button if in the game over menu.
+    if not game_over:
+        canvas_main.itemconfig(resume, state="normal")
+        canvas_main.coords(save, load_coords[0] + 110, load_coords[1] + 50)
+
+    # Shows the following buttons.
+    normal_buttons()
+    canvas_main.itemconfig(restarted, state="normal")
+    canvas_main.itemconfig(save, state="normal")
+    canvas_main.itemconfig(load, state="normal")
+
+    # Hides the following objects.
+    canvas_main.itemconfig(level, state="hidden")
+    canvas_main.itemconfig(cheat, state="hidden")
+
+    # Moves the load button from initial position.
+    canvas_main.coords(load, load_coords[0] - 110, load_coords[1] + 50)
+
+
+# Functions about cheats.
 def cheatz_reduce_speed_default(_):
     """
     When pressed Shift+Z the speed is set to 4.
@@ -259,36 +291,7 @@ def cheatv_invulnerability(_):
         canvas_main.tag_raise(cheat)
 
 
-def boss_key(_):
-    """
-    When tab is clicked, it opens the boss.css file.
-    It also pauses the game and shows all the buttons.
-    Takes an event as an argument and that is why used "_".
-    """
-    global pause_game, game_over
-    opn("boss.css")
-
-    pause_game = True
-
-    # Does not show the resume button if in the game over menu.
-    if not game_over:
-        canvas_main.itemconfig(resume, state="normal")
-        canvas_main.coords(save, load_coords[0] + 110, load_coords[1] + 50)
-
-    # Shows the following buttons.
-    normal_buttons()
-    canvas_main.itemconfig(restarted, state="normal")
-    canvas_main.itemconfig(save, state="normal")
-    canvas_main.itemconfig(load, state="normal")
-
-    # Hides the following objects.
-    canvas_main.itemconfig(level, state="hidden")
-    canvas_main.itemconfig(cheat, state="hidden")
-
-    # Moves the load button from initial position.
-    canvas_main.coords(load, load_coords[0] - 110, load_coords[1] + 50)
-
-
+# Functions about modifying buttons.
 def normal_buttons():
     """Makes the exit, leaderboard and options buttons visible again."""
     canvas_main.itemconfig(options, state="normal")
@@ -316,26 +319,14 @@ def shift_buttons(y):
     canvas_main.coords(options, options_coords[0], options_coords[1] + y)
 
 
-def game_over_buttons():
-    """
-    When the game is over, this function is called.
-    It displays all the required buttons and texts.
-    """
-    # Sets the following button states to normal
-    normal_buttons()
-    canvas_main.itemconfig(restarted, state="normal")
-    canvas_main.itemconfig(load, state="normal")
-    canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
-
-    # Shows the game over score and raises it above all.
-    canvas_main.itemconfig(game_over_score, state="normal", text="Score: " + str(score))
-    canvas_main.tag_raise(game_over_score)
-
-    # Deletes the "GAME OVER" text.
-    canvas_main.delete(game_over_text)
-
-
+# Functions about setting name.
 def ask_name_choice(_):
+    """
+    Asks the player if they want to change their name.
+    Two options will be displayed saying default and change.
+    Deletes the previous window's widgets.
+    Takes one argument which is the event of Return press.
+    """
     canvas_main.unbind("<Return>")
     canvas_main.delete(press_enter_to_continue)
     canvas_main.delete(welcome_text)
@@ -347,7 +338,12 @@ def ask_name_choice(_):
     canvas_main.itemconfig(use_default, state="normal")
     canvas_main.itemconfig(change_name, state="normal")
 
+
 def use_default_name():
+    """
+    If the player selects default name, it deletes the widgets
+    and proceeds to the main menu as the default has been set earlier.
+    """
     canvas_main.delete(name_change_text)
     canvas_main.delete(use_default)
     canvas_main.delete(change_name)
@@ -355,38 +351,46 @@ def use_default_name():
 
 
 def entry_clear(_):
+    """Deletes the characters that are in the entry widget if called."""
     enter_name_box.delete(0, "end")
 
 
 def change_name():
+    """
+    Makes an entry widget which takes the player name.
+    Also shows a done button which takes to the next screen.
+    """
     global entry_box, enter_name_box
     canvas_main.delete(name_change_text)
     canvas_main.delete(use_default)
     canvas_main.delete(change_name)
 
-    # Create Entry box
+    # Create Entry box.
     enter_name_box = Entry(window, font=("OCR A Extended", 25), width=25, fg="black", bd=0)
+    # Enters a default text in the entry box.
     enter_name_box.insert(0, "Enter Name")
 
+    # Binds button-1 of mouse to it which calls a function and clears the default text
     enter_name_box.bind("<Button-1>", entry_clear)
     entry_box = canvas_main.create_window(window_width / 2, window_height / 2, window=enter_name_box)
     canvas_main.itemconfig(done, state="normal")
 
+
 def done_button_click():
+    """
+    When the done button is clicked, the name is saved to whatever was written in the entry box.
+    After assigning the value to the variable, it deletes the widgets and proceeds to main menu.
+    """
     global name
     name = enter_name_box.get()
-    print(name)
     canvas_main.delete(entry_box)
     canvas_main.delete(done)
     main_menu()
 
 
+# Functions about menus.
 def main_menu():
-    """
-    This function removes the welcome screen and displays all the buttons.
-    Takes an event as an argument and that is why used "_".
-    """
-    # Add buttons to main menu of canvas
+    """This function shows the 5 main menu buttons."""
     canvas_main.itemconfig(start, state="normal")
     canvas_main.itemconfig(load, state="normal")
     normal_buttons()
@@ -492,52 +496,91 @@ def restart_game():
     main_game()
 
 
+def game_over_menu():
+    """
+    When the game is over, this function is called.
+    It displays all the required buttons and texts.
+    """
+    # Sets the following button states to normal
+    normal_buttons()
+    canvas_main.itemconfig(restarted, state="normal")
+    canvas_main.itemconfig(load, state="normal")
+    canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
+
+    # Shows the game over score and raises it above all.
+    canvas_main.itemconfig(game_over_score, state="normal", text="Score: " + str(score))
+    canvas_main.tag_raise(game_over_score)
+
+    # Deletes the "GAME OVER" text.
+    canvas_main.delete(game_over_text)
+
+
+# Functions about leaderboard.
 def create_database_table():
+    """
+    This function runs when the program is run and if there is no database table,
+    it creates a table with the selected name.
+    If the table exists, the function has no effect.
+    """
+    # Connects to the database
     conn = sqlite3.connect("leaderboard_database.db")
+
+    # Creates cursor and attempts to create a table if it does not already exist.
     curs = conn.cursor()
     curs.execute("CREATE TABLE IF NOT EXISTS leaderboard (Name text, Score integer)")
+
+    # Commits and closes the file after finishing all tasks.
     conn.commit()
     conn.close()
 
 
-def save_leaderboard(name, score):
-
+def save_leaderboard(player_name, total_score):
+    """
+    Takes player's name and score and stores them to the database.
+    Player's name will be a string and score will be an integer.
+    """
+    # Connects to the database.
     conn = sqlite3.connect("leaderboard_database.db")
 
     # create cursor
     curs = conn.cursor()
 
-    # curs.execute("CREATE TABLE leaderboard (Name text, Score integer)")
+    # Inserts the name and score to a new row on the leaderboard table.
     curs.execute("INSERT INTO leaderboard VALUES (:Name, :Score)",
                  {
-                    "Name": name,
-                    "Score": score
-                 }
-                 )
+                     "Name": player_name,
+                     "Score": total_score
+                 })
+
+    # Commits and closes the database.
     conn.commit()
     conn.close()
 
 
-def display_leaderboard():
-
+def get_leaderboard_values():
+    """Gets top 10 scores from the database and returns to the caller of the function."""
+    # Connects to the database.
     conn = sqlite3.connect("leaderboard_database.db")
 
-    # create cursor
-    curs = conn.cursor()
+    # creates the cursor.
+    curse = conn.cursor()
 
-    # curs.execute("CREATE TABLE leaderboard (Name text, Score integer)")
-    curs.execute("SELECT *, oid FROM leaderboard ORDER BY Score DESC")
-    leaders = curs.fetchall()
+    # Selects all the columns and orders the table by descending score.
+    curse.execute("SELECT *, oid FROM leaderboard ORDER BY Score DESC")
+
+    # Fetches top 10 scores.
+    leaders = curse.fetchmany(10)
 
     conn.commit()
     conn.close()
 
+    # Returns the list of tuples to the caller.
     return leaders
 
 
 def leaderboard():
     """
-    Makes the leaderboard which displays the top 10 scores in descending order.
+    Makes the leaderboard which displays the top 10 scores in descending order with player name.
     Hides all the previous widgets and uses file handling to sort and display scores.
     """
     # Packing the outer leaderboard frame.
@@ -582,62 +625,28 @@ def leaderboard():
     canvas_leaderboard.create_text(60, 60, fill="white", text="Leaderboard:",
                                    font=("OCR A Extended", 40), anchor="w")
 
-    leaders = display_leaderboard()
+    # Gets a list of tuples containing rows of table from the database.
+    leaders = get_leaderboard_values()
+
+    # Forms a string with the first two values of the tuples which are name and score.
     print_leaders = ""
     for idx, val in enumerate(leaders, start=1):
         print_leaders += str(idx) + ". " + str(val[0]) + " - " + str(val[1]) + "\n\n"
 
+    # Prints nothing to show here if the database is empty.
     if print_leaders == "":
         canvas_leaderboard.create_text(window_width / 2, window_height / 2, fill="white",
                                        font=("OCR A Extended", 25), text="Nothing to show here", justify="left")
-    else:
-        canvas_leaderboard.create_text(80, 120, fill="white", font=("OCR A Extended", 25),
-                                      text=print_leaders, justify="left", anchor="nw")
 
-    # # Makes a list with the scores stored in the leaderboard.txt file.
-    # unsorted = open("leaderboard.txt", "r")
-    # words = unsorted.readlines()
-    # for idx, val in enumerate(words):
-    #     if "\n" in val:
-    #         words[idx] = val[0:len(val) - 1]
-    # if "" in words:
-    #     words.remove("")
-    # words = [int(x) for x in words]
-    # unsorted.close()
-    #
-    # # Sorts the list in descending order.
-    # words.sort(reverse=True)
-    #
-    # # Stores the sorted scores in the leaderboardsorted file.
-    # file_sorted = open("leaderboardsorted.txt", "w")
-    # for i in words:
-    #     file_sorted.write(str(i) + "\n")
-    # file_sorted.close()
-    #
-    # # Reads from the leaderboardsorted file to display the leaderboard.
-    # file = open("leaderboardsorted.txt", "r")
-    # lines = file.readlines()
-    # # If the scores file is empty, this line is shown.
-    # if len(lines) == 0:
-    #     pass
-    #     canvas_leaderboard.create_text(window_width / 2, window_height / 2, fill="white",
-    #                                    font=("OCR A Extended", 25), text="Nothing to show here", justify="left")
-    # # Otherwise, Top 10 scores are displayed
-    # else:
-    #     count = 1
-    #     list1 = []
-    #     for idx, val in enumerate(lines, start=1):
-    #         if count <= 10:
-    #             list1.append(str(idx) + ". " + str(val) + "\n")
-    #             count += 1
-    #     list1 = "".join(list1)
-    #     canvas_leaderboard.create_text(80, 120, fill="white",
-    #                                    font=("OCR A Extended", 25), text=list1, justify="left", anchor="nw")
-    # file.close()
+    # Prints out the top 10 scores in new lines.
+    else:
+        canvas_leaderboard.create_text(65, 120, fill="white", font=("OCR A Extended", 25),
+                                       text=print_leaders, justify="left", anchor="nw")
 
     canvas_main.itemconfig(backs, state="normal")
 
 
+# Functions about options menu
 def options_button_click():
     """
     When the options button is clicked, it creates three buttons and hides the earlier ones.
@@ -703,6 +712,30 @@ def cheat_codes():
     canvas_main.itemconfig(back1s, state="normal")
 
 
+def help_player():
+    """
+    Displays text and a back button to get back to options screen.
+    Explains to the player the mechanism of the game.
+    """
+    global options_text
+    # This text is displayed when the help button is clicked
+    explanation = "The player has to avoid the asteroids to earn score and survive\n\n" \
+                  "The speed and level will increase every 100 scores\n\n" \
+                  "Speed will keep on increasing till game over\n\n" \
+                  "The game is over if the player crashes into any asteroid\n\n" \
+                  "The player can use cheats if he wants to but is discouraged\n\n\n" \
+                  "BOSS KEY: <TAB>"
+    options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
+                                              font=("OCR A Extended", 25), text=explanation, justify="center")
+
+    canvas_main.itemconfig(cheats, state="hidden")
+    canvas_main.itemconfig(key_binds, state="hidden")
+    canvas_main.itemconfig(helps, state="hidden")
+    canvas_main.itemconfig(backs, state="hidden")
+
+    canvas_main.itemconfig(back1s, state="normal")
+
+
 def key_binds_options():
     """
     This function displays two buttons and hides the buttons from previous screen.
@@ -752,30 +785,6 @@ def wasd_keybinds():
     arrow_flag = False
 
 
-def help_player():
-    """
-    Displays text and a back button to get back to options screen.
-    Explains to the player the mechanism of the game.
-    """
-    global options_text
-    # This text is displayed when the help button is clicked
-    explanation = "The player has to avoid the asteroids to earn score and survive\n\n" \
-                  "The speed and level will increase every 100 scores\n\n" \
-                  "Speed will keep on increasing till game over\n\n" \
-                  "The game is over if the player crashes into any asteroid\n\n" \
-                  "The player can use cheats if he wants to but is discouraged\n\n\n" \
-                  "BOSS KEY: <TAB>"
-    options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
-                                              font=("OCR A Extended", 25), text=explanation, justify="center")
-
-    canvas_main.itemconfig(cheats, state="hidden")
-    canvas_main.itemconfig(key_binds, state="hidden")
-    canvas_main.itemconfig(helps, state="hidden")
-    canvas_main.itemconfig(backs, state="hidden")
-
-    canvas_main.itemconfig(back1s, state="normal")
-
-
 def back_clear_to_options():
     """
     This function clears the cheat code or help screen.
@@ -813,7 +822,7 @@ def back_clear():
         canvas_main.itemconfig(restarted, state="normal")
         canvas_main.itemconfig(load, state="normal")
     elif game_over:
-        game_over_buttons()
+        game_over_menu()
         canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
     else:
         canvas_main.itemconfig(start, state="normal")
@@ -823,6 +832,7 @@ def back_clear():
     canvas_main.tag_raise(main_image)
 
 
+# Functions about save and load
 def save_game():
     """
     Saves the score, speed and spaceship position for the player to load later.
@@ -878,6 +888,7 @@ def load_game():
     main_game()
 
 
+# Functions running the main game
 def asteroids_and_collision():
     """
     Keeps the asteroid falling loop running till the game is over.
@@ -934,14 +945,10 @@ def asteroids_and_collision():
 
                     # Saves the game when the score is not 0
                     if score != 0:
-                        # file = open("leaderboard.txt", "a")
-                        # file.write(str(score) + "\n")
-                        # file.close()
-                        # connect to the database
-                        print(name)
+                        # Calls the function to save the score and player name
                         save_leaderboard(name, score)
 
-                    canvas_main.after(1000, game_over_buttons)
+                    canvas_main.after(1000, game_over_menu)
                     break
             # Moves the asteroids down every time.
             canvas_main.move(asteroid[i], 0, y[i])
@@ -1035,10 +1042,12 @@ game_over = False
 spaceship_pos = None
 options_text = None
 canvas_options = None
+enter_name_box = None
 selected_keybind = None
 name = getlogin()
 asteroid = []
 scoreText = ""
+entry_box = ""
 game_over_text = ""
 asteroid_speed = 4
 level_number = 1
