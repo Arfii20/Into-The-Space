@@ -34,6 +34,9 @@ There is a leaderboard which reflects the top 10 scores in the game.
 # cheat.png source: http://pixelartmaker.com/art/184effceebac6a0
 # help.png source: http://pixelartmaker.com/art/e423fd17591bcaa
 
+# Edited all the buttons to gray colour and made the unmentioned pictures by myself using pixelartmaker.com
+
+
 from tkinter import Tk, Canvas, Button, Frame, ttk, Entry, Label
 from pickle import dump, load as ld
 from random import randint, shuffle
@@ -475,6 +478,7 @@ def pause_menu(_):
         hidden_buttons()
         bind_keys()
 
+        canvas_main.itemconfig(game_saved, state="hidden")
         canvas_main.itemconfig(level, state="normal")
         canvas_main.tag_raise(level)
 
@@ -495,6 +499,7 @@ def resume_button_click():
     bind_keys()
     canvas_main.bind("<q>", boss_key2)
     canvas_main.bind("<Tab>", boss_key1)
+    canvas_main.itemconfig(game_saved, state="hidden")
 
     # Setting the variable to false resumes the main while loop.
     pause_game = False
@@ -635,6 +640,7 @@ def leaderboard():
     # Unbinding the boss key
     canvas_main.unbind("<q>")
     canvas_main.unbind("<Tab>")
+    canvas_main.unbind("<Escape>")
     # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
 
@@ -708,6 +714,7 @@ def options_button_click():
     global canvas_options
     canvas_main.unbind("<q>")
     canvas_main.unbind("<Tab>")
+    canvas_main.unbind("<Escape>")
     # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
 
@@ -875,6 +882,7 @@ def back_clear():
         canvas_main.itemconfig(save, state="normal")
         canvas_main.itemconfig(restarted, state="normal")
         canvas_main.itemconfig(load, state="normal")
+        canvas_main.bind("<Escape>", pause_menu)
     elif game_over:
         game_over_menu()
         canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
@@ -910,10 +918,6 @@ def load_game():
     The asteroids are newly formed after this load.
     """
     global score, asteroid_speed, restart_flag, pause_game, game_over, level_number
-
-    # Saves the current score before reloading.
-    if score != 0:
-        save_leaderboard(name, score)
 
     # Loads the saved values from the bat files.
     score = ld(open("save/score.bat", "rb"))
@@ -993,6 +997,8 @@ def asteroids_and_collision():
                 if game_over:
                     unbind_keys()
                     canvas_main.unbind("<Escape>")
+                    canvas_main.unbind("<Tab>")
+                    canvas_main.unbind("<q>")
                     canvas_main.itemconfig(game_over_text, state="normal")
                     canvas_main.tag_raise(game_over_text)
                     canvas_main.itemconfig(level, state="hidden")
