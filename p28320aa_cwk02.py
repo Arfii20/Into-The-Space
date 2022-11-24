@@ -267,7 +267,10 @@ def cheatz_reduce_speed_default(_):
     Takes an event as an argument and that is why used "_".
     """
     global asteroid_speed
-    asteroid_speed = 4
+    if system() == "Windows":
+        asteroid_speed = 4
+    else:
+        asteroid_speed = 0.5
     canvas_main.itemconfig(cheat, state="normal", text="Spead set to default")
     # Raising so that any other object does not come in front of it.
     canvas_main.tag_raise(cheat)
@@ -279,11 +282,16 @@ def cheatx_reduce_speed_by_one(_):
     Takes an event as an argument and that is why used "_".
     """
     global asteroid_speed
-    if asteroid_speed > 4:
+    if asteroid_speed > 4 and system() == "Windows":
         asteroid_speed -= 1
-    canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
-    # Raising so that any other object does not come in front of it.
-    canvas_main.tag_raise(cheat)
+        canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
+        # Raising so that any other object does not come in front of it.
+        canvas_main.tag_raise(cheat)
+    elif asteroid_speed > 0.5 and system() != "Windows":
+        asteroid_speed -= 0.1
+        canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
+        # Raising so that any other object does not come in front of it.
+        canvas_main.tag_raise(cheat)
 
 
 def cheatc_increase_score(_):
@@ -509,7 +517,10 @@ def restart_game():
     # Sets the following variables to default
     pause_game = False
     restart_flag = True
-    asteroid_speed = 4
+    if system() == "Windows":
+        asteroid_speed = 4
+    else:
+        asteroid_speed = 0.5
     level_number = 1
     score = 0
 
@@ -1093,9 +1104,12 @@ name = getlogin()
 asteroid = []
 scoreText = ""
 entry_box = ""
-asteroid_speed = 4
 level_number = 1
 score = 0
+if system() == "Windows":
+    asteroid_speed = 4
+else:
+    asteroid_speed = 0.4
 
 "Creating the Main Canvas of the game."
 # Will contain most of the game
