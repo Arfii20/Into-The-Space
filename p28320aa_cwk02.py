@@ -34,7 +34,7 @@ There is a leaderboard which reflects the top 10 scores in the game.
 # cheat.png source: http://pixelartmaker.com/art/184effceebac6a0
 # help.png source: http://pixelartmaker.com/art/e423fd17591bcaa
 
-from tkinter import Tk, Canvas, Button, Frame, ttk, Entry
+from tkinter import Tk, Canvas, Button, Frame, ttk, Entry, Label
 from pickle import dump, load as ld
 from random import randint, shuffle
 from webbrowser import open as opn
@@ -201,34 +201,63 @@ def spaceship_touches_sides():
             canvas_main.bind("<w>", move_spaceship_up)
 
 
-def boss_key(_):
+def boss_key1(_):
     """
     When tab is clicked, it opens the boss.css file.
     It also pauses the game and shows all the buttons.
     Takes an event as an argument and that is why used "_".
     """
     global pause_game, game_over
-    opn("boss.css")
+    # Only works while playing the game.
+    if not pause_game:
+        opn("boss.css")
 
-    pause_game = True
+        pause_game = True
 
-    # Does not show the resume button if in the game over menu.
-    if not game_over:
-        canvas_main.itemconfig(resume, state="normal")
-        canvas_main.coords(save, load_coords[0] + 110, load_coords[1] + 50)
+        # Does not show the resume button if in the game over menu.
+        if not game_over:
+            canvas_main.itemconfig(resume, state="normal")
+            canvas_main.coords(save, load_coords[0] + 110, load_coords[1] + 50)
 
-    # Shows the following buttons.
-    normal_buttons()
-    canvas_main.itemconfig(restarted, state="normal")
-    canvas_main.itemconfig(save, state="normal")
-    canvas_main.itemconfig(load, state="normal")
+        # Shows the following buttons.
+        normal_buttons()
+        canvas_main.itemconfig(restarted, state="normal")
+        canvas_main.itemconfig(save, state="normal")
+        canvas_main.itemconfig(load, state="normal")
 
-    # Hides the following objects.
-    canvas_main.itemconfig(level, state="hidden")
-    canvas_main.itemconfig(cheat, state="hidden")
+        # Hides the following objects.
+        canvas_main.itemconfig(level, state="hidden")
+        canvas_main.itemconfig(cheat, state="hidden")
 
-    # Moves the load button from initial position.
-    canvas_main.coords(load, load_coords[0] - 110, load_coords[1] + 50)
+        # Moves the load button from initial position.
+        canvas_main.coords(load, load_coords[0] - 110, load_coords[1] + 50)
+
+
+def boss_key2(_):
+    """
+    When ` is clicked, it flips to an excel image.
+    It also pauses the game and resumes when clicked again.
+    Takes an event as an argument and that is why used "_".
+    """
+    global pause_game, boss_flag
+
+    # Only works when not playing the game
+    if not boss_flag and not pause_game:
+        boss_flag = True
+        pause_game = True
+        canvas_main.itemconfig(boss_key, state="normal")
+        canvas_main.tag_raise(boss_key)
+        unbind_keys()
+        canvas_main.unbind("<Escape>")
+        canvas_main.unbind("<Tab>")
+
+    elif boss_flag:
+        pause_game = False
+        boss_flag = False
+        canvas_main.bind("<Escape>", pause_menu)
+        canvas_main.bind("<Tab>", boss_key1)
+        canvas_main.itemconfig(boss_key, state="hidden")
+        asteroids_and_collision()
 
 
 # Functions about cheats.
@@ -433,6 +462,8 @@ def pause_menu(_):
         canvas_main.itemconfig(save, state="hidden")
         canvas_main.itemconfig(main_image, state="hidden")
         canvas_main.itemconfig(load, state="hidden")
+        canvas_main.bind("<Tab>", boss_key1)
+        canvas_main.bind("<`>", boss_key2)
         hidden_buttons()
         bind_keys()
 
@@ -454,6 +485,8 @@ def resume_button_click():
     canvas_main.itemconfig(load, state="hidden")
     hidden_buttons()
     bind_keys()
+    canvas_main.bind("<`>", boss_key2)
+    canvas_main.bind("<Tab>", boss_key1)
 
     # Setting the variable to false resumes the main while loop.
     pause_game = False
@@ -489,6 +522,9 @@ def restart_game():
     canvas_main.itemconfig(save, state="hidden")
     hidden_buttons()
 
+    canvas_main.bind("<Tab>", boss_key1)
+    canvas_main.bind("<`>", boss_key2)
+
     # Deletes all the asteroids from the last game
     for j in asteroid:
         canvas_main.delete(j)
@@ -503,6 +539,8 @@ def game_over_menu():
     """
     # Sets the following button states to normal
     normal_buttons()
+    canvas_main.unbind("<`>")
+    canvas_main.unbind("<Tab>")
     canvas_main.itemconfig(restarted, state="normal")
     canvas_main.itemconfig(load, state="normal")
     canvas_main.coords(load, window_width / 2, window_height / 2 - 50)
@@ -512,7 +550,7 @@ def game_over_menu():
     canvas_main.tag_raise(game_over_score)
 
     # Deletes the "GAME OVER" text.
-    canvas_main.delete(game_over_text)
+    canvas_main.itemconfig(game_over_text, state="hidden")
 
 
 # Functions about leaderboard.
@@ -583,6 +621,9 @@ def leaderboard():
     Makes the leaderboard which displays the top 10 scores in descending order with player name.
     Hides all the previous widgets and uses file handling to sort and display scores.
     """
+    # Unbinding the boss key
+    canvas_main.unbind("<`>")
+    canvas_main.unbind("<Tab>")
     # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
 
@@ -654,6 +695,8 @@ def options_button_click():
     For this screen, a new frame, canvas and background stars are created.
     """
     global canvas_options
+    canvas_main.unbind("<`>")
+    canvas_main.unbind("<Tab>")
     # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
 
@@ -700,7 +743,7 @@ def cheat_codes():
                   "Reduce asteroid speed by 1:\nShift + x \n\n" \
                   "Increase score by 500:\nShift + c \n\n" \
                   "God Mode (Invulnerability):\nShift + v\n\n\n" \
-                  "BOSS KEY: <TAB>"
+                  "BOSS KEY1: <TAB> and BOSS KEY2: <`>"
     options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
 
@@ -724,7 +767,7 @@ def help_player():
                   "Speed will keep on increasing till game over\n\n" \
                   "The game is over if the player crashes into any asteroid\n\n" \
                   "The player can use cheats if he wants to but is discouraged\n\n\n" \
-                  "BOSS KEY: <TAB>"
+                  "BOSS KEY: <TAB> and BOSS KEY2: <`>"
     options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
 
@@ -894,7 +937,7 @@ def asteroids_and_collision():
     Keeps the asteroid falling loop running till the game is over.
     The collision detection and finds when game over.
     """
-    global game_over_text, pause_game, game_over, score, \
+    global pause_game, game_over, score, \
         asteroid_speed, spaceship_pos, level_number, invulnerable
 
     # This loop only happens if pause flag is false.
@@ -936,8 +979,8 @@ def asteroids_and_collision():
                 if game_over:
                     unbind_keys()
                     canvas_main.unbind("<Escape>")
-                    game_over_text = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
-                                                             font=("OCR A Extended", 120), text="Game Over")
+                    canvas_main.itemconfig(game_over_text, state="normal")
+                    canvas_main.tag_raise(game_over_text)
                     canvas_main.itemconfig(level, state="hidden")
                     canvas_main.itemconfig(cheat, state="hidden")
                     canvas_main.itemconfig(scoreText, state="hidden")
@@ -997,7 +1040,8 @@ def main_game():
     canvas_main.bind("<Escape>", pause_menu)
 
     # Boss Key - TAB.
-    canvas_main.bind("<Tab>", boss_key)
+    canvas_main.bind("<Tab>", boss_key1)
+    canvas_main.bind("<`>", boss_key2)
     canvas_main.focus_set()
 
     "Making the scoring system"
@@ -1039,6 +1083,7 @@ restart_flag = False
 invulnerable = False
 pause_game = False
 game_over = False
+boss_flag = False
 spaceship_pos = None
 options_text = None
 canvas_options = None
@@ -1048,7 +1093,6 @@ name = getlogin()
 asteroid = []
 scoreText = ""
 entry_box = ""
-game_over_text = ""
 asteroid_speed = 4
 level_number = 1
 score = 0
@@ -1102,6 +1146,11 @@ canvas_main.itemconfig(level, state="hidden")
 name_change_text = canvas_main.create_text(window_width / 2, window_height / 2 - 100, fill="white",
                                            font=("OCR A Extended", 25), justify="center")
 canvas_main.itemconfig(name_change_text, state="hidden")
+
+# The text that will be shown when the game is over
+game_over_text = canvas_main.create_text(window_width / 2, window_height / 2, fill="white",
+                                         font=("OCR A Extended", 120), text="Game Over")
+canvas_main.itemconfig(game_over_text, state="hidden")
 
 """
 This will add a background of stars to the whole game.
@@ -1301,6 +1350,11 @@ exit_button = Button(window, image=exit_image, bg="black", border=0, command=win
 exited = canvas_main.create_window(window_width / 2, window_height / 2 + 200, window=exit_button)
 canvas_main.itemconfig(exited, state="hidden")
 exit_coords = canvas_main.coords(exited)
+
+"Boss Key Image."
+boss_key_image = ImageTk.PhotoImage(Image.open("images/bosskey.png"))
+boss_key = canvas_main.create_image(window_width / 2, window_height / 2, image=boss_key_image, anchor="center")
+canvas_main.itemconfig(boss_key, state="hidden")
 
 "Spaceship."
 spaceship_org = Image.open("images/spaceship_image.png")
