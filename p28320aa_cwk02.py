@@ -59,7 +59,7 @@ def configure_window():
     if system() == "Windows":
         window.iconbitmap("images/game_icon.ico")
     else:
-        window.iconbitmap("images/game_icon.xbm")
+        window.iconbitmap("@images/game_icon.xbm")
 
     # Disabled resizing of the window.
     window.resizable(False, False)
@@ -270,7 +270,7 @@ def cheatz_reduce_speed_default(_):
     if system() == "Windows":
         asteroid_speed = 4
     else:
-        asteroid_speed = 0.4
+        asteroid_speed = 1.6
     canvas_main.itemconfig(cheat, state="normal", text="Spead set to default")
     # Raising so that any other object does not come in front of it.
     canvas_main.tag_raise(cheat)
@@ -287,8 +287,8 @@ def cheatx_reduce_speed_by_one(_):
         canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
         # Raising so that any other object does not come in front of it.
         canvas_main.tag_raise(cheat)
-    elif asteroid_speed > 0.4 and system() != "Windows":
-        asteroid_speed -= 0.1
+    elif asteroid_speed > 1.6 and system() != "Windows":
+        asteroid_speed -= 0.2
         canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
         # Raising so that any other object does not come in front of it.
         canvas_main.tag_raise(cheat)
@@ -520,7 +520,7 @@ def restart_game():
     if system() == "Windows":
         asteroid_speed = 4
     else:
-        asteroid_speed = 0.4
+        asteroid_speed = 1.6
     level_number = 1
     score = 0
 
@@ -969,7 +969,7 @@ def asteroids_and_collision():
                     if system() == "Windows":
                         asteroid_speed += 1
                     else:
-                        asteroid_speed += 0.1
+                        asteroid_speed += 0.2
                     level_number += 1
                     canvas_main.itemconfig(level, state="normal",
                                            text=("Level " + str(level_number) + ": Speed increased"))
@@ -1112,7 +1112,7 @@ score = 0
 if system() == "Windows":
     asteroid_speed = 4
 else:
-    asteroid_speed = 0.4
+    asteroid_speed = 1.6
 
 "Creating the Main Canvas of the game."
 # Will contain most of the game
@@ -1344,7 +1344,7 @@ helps = canvas_main.create_window(window_width / 2, window_height / 2 + 100, win
 canvas_main.itemconfig(helps, state="hidden")
 
 "Back button."
-back_org = Image.open("images/back.png")
+back_org = Image.open("images/Back.png")
 back_resized = back_org.resize((204, 75))
 back_image = ImageTk.PhotoImage(back_resized)
 back_button = Button(window, image=back_image, border=0, bg="black", command=back_clear)
