@@ -753,7 +753,7 @@ def options_button_click():
 def cheat_codes():
     """
     Displays and tells the user what the Cheat Codes are.
-    Also mentions what the boss key is.
+    Also mentions what the boss keys are.
     """
     global options_text
     # This text is displayed when the cheat code button is clicked.
