@@ -240,7 +240,6 @@ def boss_key2(_):
     Takes an event as an argument and that is why used "_".
     """
     global pause_game, boss_flag
-
     # Only works when not playing the game
     if not boss_flag and not pause_game:
         boss_flag = True
@@ -254,6 +253,7 @@ def boss_key2(_):
     elif boss_flag:
         pause_game = False
         boss_flag = False
+        bind_keys()
         canvas_main.bind("<Escape>", pause_menu)
         canvas_main.bind("<Tab>", boss_key1)
         canvas_main.itemconfig(boss_key, state="hidden")
@@ -270,7 +270,7 @@ def cheatz_reduce_speed_default(_):
     if system() == "Windows":
         asteroid_speed = 4
     else:
-        asteroid_speed = 0.5
+        asteroid_speed = 0.4
     canvas_main.itemconfig(cheat, state="normal", text="Spead set to default")
     # Raising so that any other object does not come in front of it.
     canvas_main.tag_raise(cheat)
@@ -287,7 +287,7 @@ def cheatx_reduce_speed_by_one(_):
         canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
         # Raising so that any other object does not come in front of it.
         canvas_main.tag_raise(cheat)
-    elif asteroid_speed > 0.5 and system() != "Windows":
+    elif asteroid_speed > 0.4 and system() != "Windows":
         asteroid_speed -= 0.1
         canvas_main.itemconfig(cheat, state="normal", text="Spead reduced by 1")
         # Raising so that any other object does not come in front of it.
@@ -471,7 +471,7 @@ def pause_menu(_):
         canvas_main.itemconfig(main_image, state="hidden")
         canvas_main.itemconfig(load, state="hidden")
         canvas_main.bind("<Tab>", boss_key1)
-        canvas_main.bind("<`>", boss_key2)
+        canvas_main.bind("<q>", boss_key2)
         hidden_buttons()
         bind_keys()
 
@@ -493,7 +493,7 @@ def resume_button_click():
     canvas_main.itemconfig(load, state="hidden")
     hidden_buttons()
     bind_keys()
-    canvas_main.bind("<`>", boss_key2)
+    canvas_main.bind("<q>", boss_key2)
     canvas_main.bind("<Tab>", boss_key1)
 
     # Setting the variable to false resumes the main while loop.
@@ -520,7 +520,7 @@ def restart_game():
     if system() == "Windows":
         asteroid_speed = 4
     else:
-        asteroid_speed = 0.5
+        asteroid_speed = 0.4
     level_number = 1
     score = 0
 
@@ -534,7 +534,7 @@ def restart_game():
     hidden_buttons()
 
     canvas_main.bind("<Tab>", boss_key1)
-    canvas_main.bind("<`>", boss_key2)
+    canvas_main.bind("<q>", boss_key2)
 
     # Deletes all the asteroids from the last game
     for j in asteroid:
@@ -550,7 +550,7 @@ def game_over_menu():
     """
     # Sets the following button states to normal
     normal_buttons()
-    canvas_main.unbind("<`>")
+    canvas_main.unbind("<q>")
     canvas_main.unbind("<Tab>")
     canvas_main.itemconfig(restarted, state="normal")
     canvas_main.itemconfig(load, state="normal")
@@ -633,7 +633,7 @@ def leaderboard():
     Hides all the previous widgets and uses file handling to sort and display scores.
     """
     # Unbinding the boss key
-    canvas_main.unbind("<`>")
+    canvas_main.unbind("<q>")
     canvas_main.unbind("<Tab>")
     # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
@@ -706,7 +706,7 @@ def options_button_click():
     For this screen, a new frame, canvas and background stars are created.
     """
     global canvas_options
-    canvas_main.unbind("<`>")
+    canvas_main.unbind("<q>")
     canvas_main.unbind("<Tab>")
     # Packing the outer leaderboard frame.
     secondary_frame.pack(fill="both", expand=1)
@@ -754,7 +754,7 @@ def cheat_codes():
                   "Reduce asteroid speed by 1:\nShift + x \n\n" \
                   "Increase score by 500:\nShift + c \n\n" \
                   "God Mode (Invulnerability):\nShift + v\n\n\n" \
-                  "BOSS KEY1: <TAB> and BOSS KEY2: <`>"
+                  "BOSS KEY1: <TAB> and BOSS KEY2: <Q>"
     options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
 
@@ -778,7 +778,7 @@ def help_player():
                   "Speed will keep on increasing till game over\n\n" \
                   "The game is over if the player crashes into any asteroid\n\n" \
                   "The player can use cheats if he wants to but is discouraged\n\n\n" \
-                  "BOSS KEY: <TAB> and BOSS KEY2: <`>"
+                  "BOSS KEY: <TAB> and BOSS KEY2: <Q>"
     options_text = canvas_options.create_text(window_width / 2, window_height / 3 + 100, fill="white",
                                               font=("OCR A Extended", 25), text=explanation, justify="center")
 
@@ -966,7 +966,10 @@ def asteroids_and_collision():
                 canvas_main.tag_raise(scoreText)
                 # Every hundred score, level and asteroid speed increases.
                 if score != 0 and score % 100 == 0:
-                    asteroid_speed += 1
+                    if system() == "Windows":
+                        asteroid_speed += 1
+                    else:
+                        asteroid_speed += 0.1
                     level_number += 1
                     canvas_main.itemconfig(level, state="normal",
                                            text=("Level " + str(level_number) + ": Speed increased"))
@@ -1052,7 +1055,7 @@ def main_game():
 
     # Boss Key - TAB.
     canvas_main.bind("<Tab>", boss_key1)
-    canvas_main.bind("<`>", boss_key2)
+    canvas_main.bind("<q>", boss_key2)
     canvas_main.focus_set()
 
     "Making the scoring system"
