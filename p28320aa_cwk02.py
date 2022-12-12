@@ -274,7 +274,7 @@ def cheatz_reduce_speed_default(_):
         asteroid_speed = 4
     else:
         asteroid_speed = 1.6
-    canvas_main.itemconfig(cheat, state="normal", text="Spead set to default")
+    canvas_main.itemconfig(cheat, state="normal", text="Speed set to default")
     # Raising so that any other object does not come in front of it.
     canvas_main.tag_raise(cheat)
 
@@ -513,7 +513,8 @@ def restart_game():
     When restart button is clicked, this function clears all the items and
     launches the main game function which starts the game from beginning.
     """
-    global restart_flag, pause_game, score, asteroid_speed, level_number, bonus_on
+    global restart_flag, pause_game, score, asteroid_speed, level_number, \
+        bonus_on, low_speed_one_on, low_speed_default_on
 
     # The game only adds the score to leaderboard file iff the score unequal zero
     if score != 0:
@@ -536,9 +537,19 @@ def restart_game():
     canvas_main.itemconfig(game_over_score, state="hidden")
     canvas_main.itemconfig(game_saved, state="hidden")
     canvas_main.itemconfig(save, state="hidden")
+
     if bonus_on:
         canvas_main.delete(bonus_object)
         bonus_on = False
+
+    if low_speed_one_on:
+        canvas_main.delete(low_speed_one_object)
+        low_speed_one_on = False
+
+    if low_speed_default_on:
+        canvas_main.delete(low_speed_default_object)
+        low_speed_default_on = False
+
     hidden_buttons()
 
     canvas_main.bind("<Tab>", boss_key1)
@@ -920,7 +931,8 @@ def load_game():
     It loads everything apart from the asteroids from last session.
     The asteroids are newly formed after this load.
     """
-    global score, asteroid_speed, restart_flag, pause_game, game_over, level_number, bonus_on
+    global score, asteroid_speed, restart_flag, pause_game, game_over, \
+        level_number, bonus_on, low_speed_one_on, low_speed_default_on
 
     # Loads the saved values from the bat files.
     score = ld(open("save/score.bat", "rb"))
@@ -947,10 +959,134 @@ def load_game():
         canvas_main.delete(bonus_object)
         bonus_on = False
 
+    if low_speed_one_on:
+        canvas_main.delete(low_speed_one_object)
+        low_speed_one_on = False
+
+    if low_speed_default_on:
+        canvas_main.delete(low_speed_default_object)
+        low_speed_default_on = False
+
     pause_game = False
 
     hidden_buttons()
     main_game()
+
+
+def bonus_parts():
+    """
+    This function makes and operates the 3 bonus objects.
+    First one increases 200 score and deletes itself when collected.
+    Second one reduces speed by 1 and Third one sets speed to default.
+    """
+    global bonus_on, bonus_object, score, low_speed_one_on, low_speed_one_object, asteroid_speed, \
+        low_speed_default_on, low_speed_default_object
+
+    if not bonus_on:
+        bonus = randint(0, 1000)
+        if bonus == 69 or bonus == 420:
+            bonus_x = randint(100, window_width - 100)
+
+            # Placing the ovals at the random points.
+            bonus_object = canvas_main.create_oval(bonus_x, -20, bonus_x + 20, 0, fill="green")
+            bonus_on = True
+
+    if bonus_on:
+        canvas_main.move(bonus_object, 0, 3)
+
+        bonus_pos = canvas_main.coords(bonus_object)
+        spaceship_pos1 = canvas_main.coords(spaceship)
+
+        bonus_score = 60 > sqrt(pow(bonus_pos[0] + 10 - spaceship_pos1[0] - 50, 2)
+                                + pow(bonus_pos[1] + 10 - spaceship_pos1[1] - 50, 2))
+
+        if bonus_score:
+            score += 200
+            score_txt = "Score: " + str(score)
+            canvas_main.itemconfig(scoreText, text=score_txt)
+            canvas_main.tag_raise(scoreText)
+            canvas_main.itemconfig(cheat, state="normal", text="Score increased by 200")
+
+            canvas_main.delete(bonus_object)
+            bonus_on = False
+
+        if bonus_pos[1] >= window_height:
+            canvas_main.delete(bonus_object)
+            bonus_on = False
+
+    " Decreases the asteroid speed by 1 "
+    if (asteroid_speed >= 6 and system() == "Windows") or (asteroid_speed >= 2 and system() != "Windows"):
+        if not low_speed_one_on:
+            low_speed_one = randint(0, 500)
+            if low_speed_one == 69 or low_speed_one == 420:
+                low_speed_one_x = randint(100, window_width - 100)
+
+                # Placing the ovals at the random points.
+                low_speed_one_object = canvas_main.create_oval(low_speed_one_x, -20, low_speed_one_x + 20,
+                                                               0, fill="orange")
+                low_speed_one_on = True
+
+    if low_speed_one_on:
+        canvas_main.move(low_speed_one_object, 0, 3)
+
+        low_speed_one_pos = canvas_main.coords(low_speed_one_object)
+        spaceship_pos2 = canvas_main.coords(spaceship)
+
+        low_speed_one_score = 60 > sqrt(pow(low_speed_one_pos[0] + 10 - spaceship_pos2[0] - 50, 2)
+                                        + pow(low_speed_one_pos[1] + 10 - spaceship_pos2[1] - 50, 2))
+
+        if low_speed_one_score:
+            if system() == "Windows":
+                asteroid_speed -= 1
+            else:
+                asteroid_speed -= 0.2
+
+            canvas_main.itemconfig(cheat, state="normal", text="Speed reduced by 1")
+
+            canvas_main.delete(low_speed_one_object)
+            low_speed_one_on = False
+
+        if low_speed_one_pos[1] >= window_height:
+            canvas_main.delete(low_speed_one_object)
+            low_speed_one_on = False
+
+    " Sets the asteroid speed to default "
+    if (asteroid_speed >= 6 and system() == "Windows") or (asteroid_speed >= 2 and system() != "Windows"):
+        if not low_speed_default_on:
+            low_speed_default = randint(0, 2000)
+            if low_speed_default == 69 or low_speed_default == 420:
+                low_speed_default_x = randint(100, window_width - 100)
+
+                # Placing the ovals at the random points.
+                low_speed_default_object = canvas_main.create_oval(low_speed_default_x, -20, low_speed_default_x + 20,
+                                                                   0, fill="red")
+                low_speed_default_on = True
+
+    if low_speed_default_on:
+        canvas_main.move(low_speed_default_object, 0, 3)
+
+        low_speed_default_pos = canvas_main.coords(low_speed_default_object)
+        spaceship_pos3 = canvas_main.coords(spaceship)
+
+        low_speed_default_score = 60 > sqrt(pow(low_speed_default_pos[0] + 10 - spaceship_pos3[0] - 50, 2)
+                                            + pow(low_speed_default_pos[1] + 10 - spaceship_pos3[1] - 50, 2))
+
+        if low_speed_default_score:
+            if system() == "Windows":
+                asteroid_speed = 4
+            else:
+                asteroid_speed = 1.6
+
+            canvas_main.itemconfig(cheat, state="normal", text="Speed set to default")
+            # Raising so that any other object does not come in front of it.
+            canvas_main.tag_raise(cheat)
+
+            canvas_main.delete(low_speed_default_object)
+            low_speed_default_on = False
+
+        if low_speed_default_pos[1] >= window_height:
+            canvas_main.delete(low_speed_default_object)
+            low_speed_default_on = False
 
 
 # Functions running the main game
@@ -960,36 +1096,12 @@ def asteroids_and_collision():
     The collision detection and finds when game over.
     """
     global pause_game, game_over, score, asteroid_speed, spaceship_pos, \
-        level_number, invulnerable, bonus_on, bonus_object
+        level_number, invulnerable, bonus_on, bonus_object, low_speed_one_on, \
+        low_speed_one_object, low_speed_default_on, low_speed_default_object
 
     # This loop only happens if pause flag is false.
     while not pause_game:
-        bonus = randint(0, 1000)
-        if bonus == 69 or bonus == 420 and not bonus_on:
-            bonus_x = randint(100, window_width - 100)
-
-            # Placing the ovals at the random points.
-            bonus_object = canvas_main.create_oval(bonus_x, -20, bonus_x + 20, 0, fill="green")
-            bonus_on = True
-
-        if bonus_on:
-            canvas_main.move(bonus_object, 0, 3)
-
-            bonus_pos = canvas_main.coords(bonus_object)
-            spaceship_pos = canvas_main.coords(spaceship)
-
-            bonus_score = 60 > sqrt(pow(bonus_pos[0] + 10 - spaceship_pos[0], 2)
-                                     + pow(bonus_pos[1] - spaceship_pos[1], 2))
-
-            if bonus_score:
-                score += 15
-                score_txt = "Score: " + str(score)
-                canvas_main.itemconfig(scoreText, text=score_txt)
-                canvas_main.tag_raise(scoreText)
-
-            if bonus_pos[1] >= window_height:
-                canvas_main.delete(bonus_object)
-                bonus_on = False
+        bonus_parts()
 
         x = y = [asteroid_speed] * 4
         # For 4 asteroids, the for-loop loops 4 times.
@@ -1020,6 +1132,7 @@ def asteroids_and_collision():
             # Position of the asteroids and the spaceship.
             asteroid_pos = canvas_main.coords(asteroid[i])
             spaceship_pos = canvas_main.coords(spaceship)
+
             spaceship_touches_sides()
 
             if not invulnerable:
@@ -1049,6 +1162,14 @@ def asteroids_and_collision():
                     if bonus_on:
                         canvas_main.delete(bonus_object)
                         bonus_on = False
+
+                    if low_speed_one_on:
+                        canvas_main.delete(low_speed_one_object)
+                        low_speed_one_on = False
+
+                    if low_speed_default_on:
+                        canvas_main.delete(low_speed_default_object)
+                        low_speed_default_on = False
 
                     canvas_main.after(1000, game_over_menu)
                     break
@@ -1150,12 +1271,17 @@ invulnerable = False
 pause_game = False
 game_over = False
 bonus_on = False
+low_speed_one_on = False
+low_speed_default_on = False
 boss_flag = False
 spaceship_pos = None
 options_text = None
 canvas_options = None
 enter_name_box = None
 selected_keybind = None
+bonus_object = ""
+low_speed_one_object = ""
+low_speed_default_object = ""
 name = getlogin()
 asteroid = []
 scoreText = ""
