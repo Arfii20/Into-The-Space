@@ -952,12 +952,11 @@ def asteroids_and_collision():
     Keeps the asteroid falling loop running till the game is over.
     The collision detection and finds when game over.
     """
-    global pause_game, game_over, score, \
-        asteroid_speed, spaceship_pos, level_number, invulnerable
+    global pause_game, game_over, score, asteroid_speed, spaceship_pos, level_number, invulnerable
 
     # This loop only happens if pause flag is false.
     while not pause_game:
-        y = [asteroid_speed] * 4
+        x = y = [asteroid_speed] * 4
         # For 4 asteroids, the for-loop loops 4 times.
         for i in range(4):
             pos = canvas_main.coords(asteroid[i])
@@ -989,6 +988,7 @@ def asteroids_and_collision():
             spaceship_touches_sides()
 
             if not invulnerable:
+
                 # Collision detection system.
                 game_over = 105 > sqrt(pow(asteroid_pos[0] + 10 - spaceship_pos[0], 2)
                                        + pow(asteroid_pos[1] - spaceship_pos[1], 2))
@@ -1013,8 +1013,15 @@ def asteroids_and_collision():
 
                     canvas_main.after(1000, game_over_menu)
                     break
-            # Moves the asteroids down every time.
-            canvas_main.move(asteroid[i], 0, y[i])
+
+            if i == 3:
+                canvas_main.move(asteroid[i], -x[i] / 4, y[i])
+            elif i == 2:
+                canvas_main.move(asteroid[i], x[i] / 3, y[i])
+            else:
+                # Moves the asteroids down every time.
+                canvas_main.move(asteroid[i], 0, y[i])
+
         # As long as the game is not over, loops back after 0.001 seconds.
         if not game_over:
             sleep(0.001)
@@ -1029,7 +1036,7 @@ def main_game():
     Hides the previous buttons and binds the keys to control the spaceship.
     Initials scoring system and asteroid's initial position.
     """
-    global score, scoreText, restart_flag, asteroid
+    global score, scoreText, restart_flag, asteroid, lives, livesText
 
     shift_buttons(50)
 
@@ -1071,7 +1078,16 @@ def main_game():
     # displaying the score on the top right.
     scoreText = canvas_main.create_text(window_width - window_width / 8, window_height / 15,
                                         fill="white", font=("OCR A Extended", 30), text=score_text)
-    canvas_main.tag_raise(score_text)
+    canvas_main.tag_raise(scoreText)
+
+    "Making the lives"
+    # storing and displaying the score.
+    lives_text = "Lives: " + str(lives)
+
+    # displaying the score on the top right.
+    livesText = canvas_main.create_text(window_width / 8, window_height / 15,
+                                        fill="white", font=("OCR A Extended", 30), text=lives_text)
+    canvas_main.tag_raise(livesText)
 
     "Stores the initial asteroid positions to a list"
     asteroid = []
@@ -1112,9 +1128,12 @@ selected_keybind = None
 name = getlogin()
 asteroid = []
 scoreText = ""
+livesText = ""
 entry_box = ""
 level_number = 1
 score = 0
+lives = 3
+count = 50
 if system() == "Windows":
     asteroid_speed = 4
 else:
