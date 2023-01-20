@@ -41,13 +41,13 @@ from tkinter import Tk, Canvas, Button, Frame, ttk, Entry, Label
 from pickle import dump, load as ld
 from random import randint, shuffle
 from webbrowser import open as opn
+from leaderboard_data import *
 from tkinter.font import Font
+from resized_images import *
 from platform import system
 from math import sqrt, pow
 from os import getlogin
 from time import sleep
-from PIL import Image, ImageTk
-import sqlite3
 
 
 def configure_window():
@@ -348,7 +348,7 @@ def hidden_buttons():
 
 def shift_buttons(y):
     """
-    Used for changing the button positions along the y-axis.
+    Used for changing the button positions along the y-axis after the game starts.
     Changes are applied to resume, restart, exit, leaderboard and options button.
     Argument y - takes the buttons y pixels down.
     """
@@ -581,69 +581,6 @@ def game_over_menu():
 
     # Deletes the "GAME OVER" text.
     canvas_main.itemconfig(game_over_text, state="hidden")
-
-
-# Functions about leaderboard.
-def create_database_table():
-    """
-    This function runs when the program is run and if there is no database table,
-    it creates a table with the selected name.
-    If the table exists, the function has no effect.
-    """
-    # Connects to the database
-    conn = sqlite3.connect("leaderboard_database.db")
-
-    # Creates cursor and attempts to create a table if it does not already exist.
-    curs = conn.cursor()
-    curs.execute("CREATE TABLE IF NOT EXISTS leaderboard (Name text, Score integer)")
-
-    # Commits and closes the file after finishing all tasks.
-    conn.commit()
-    conn.close()
-
-
-def save_leaderboard(player_name, total_score):
-    """
-    Takes player's name and score and stores them to the database.
-    Player's name will be a string and score will be an integer.
-    """
-    # Connects to the database.
-    conn = sqlite3.connect("leaderboard_database.db")
-
-    # create cursor
-    curs = conn.cursor()
-
-    # Inserts the name and score to a new row on the leaderboard table.
-    curs.execute("INSERT INTO leaderboard VALUES (:Name, :Score)",
-                 {
-                     "Name": player_name,
-                     "Score": total_score
-                 })
-
-    # Commits and closes the database.
-    conn.commit()
-    conn.close()
-
-
-def get_leaderboard_values():
-    """Gets top 10 scores from the database and returns to the caller of the function."""
-    # Connects to the database.
-    conn = sqlite3.connect("leaderboard_database.db")
-
-    # creates the cursor.
-    curse = conn.cursor()
-
-    # Selects all the columns and orders the table by descending score.
-    curse.execute("SELECT *, oid FROM leaderboard ORDER BY Score DESC")
-
-    # Fetches top 10 scores.
-    leaders = curse.fetchmany(10)
-
-    conn.commit()
-    conn.close()
-
-    # Returns the list of tuples to the caller.
-    return leaders
 
 
 def leaderboard():
@@ -1101,6 +1038,7 @@ def asteroids_and_collision():
 
     # This loop only happens if pause flag is false.
     while not pause_game:
+
         bonus_parts()
 
         x = y = [asteroid_speed] * 4
@@ -1171,12 +1109,15 @@ def asteroids_and_collision():
                         canvas_main.delete(low_speed_default_object)
                         low_speed_default_on = False
 
-                    canvas_main.after(1000, game_over_menu)
+                    canvas_main.after(1500, game_over_menu)
                     break
 
+            # To keep variety in asteroid movements
             if i == 3:
+                # Moves the 4th image slightly towards left
                 canvas_main.move(asteroid[i], -x[i] / 4, y[i])
             elif i == 2:
+                # Moves the 3th image slightly towards right
                 canvas_main.move(asteroid[i], x[i] / 3, y[i])
             else:
                 # Moves the asteroids down every time.
@@ -1392,46 +1333,31 @@ press_enter_to_continue = canvas_main.create_text(window_width / 2, window_heigh
 canvas_main.bind("<Return>", ask_name_choice)
 canvas_main.focus_set()
 
-"""
-The next sections are about loading, resizing and storing images to variables.
-Using the images, buttons are created and the state is set to hidden to use later.
-Position of the buttons are fixed using the coords function.
-"""
 "Use default button."
-use_default_org = Image.open("images/use_default.png")
-use_default_resized = use_default_org.resize((400, 75))
 use_default_image = ImageTk.PhotoImage(use_default_resized)
 use_default_button = Button(window, image=use_default_image, bg="black", border=0, command=use_default_name)
 use_default = canvas_main.create_window(window_width / 2, window_height / 2, window=use_default_button)
 canvas_main.itemconfig(use_default, state="hidden")
 
 "Change name button."
-change_name_org = Image.open("images/change_name.png")
-change_name_resized = change_name_org.resize((400, 75))
 change_name_image = ImageTk.PhotoImage(change_name_resized)
 change_name_button = Button(window, image=change_name_image, bg="black", border=0, command=change_name)
 change_name = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=change_name_button)
 canvas_main.itemconfig(change_name, state="hidden")
 
 "Done button."
-done_org = Image.open("images/done.png")
-done_resized = done_org.resize((200, 75))
 done_image = ImageTk.PhotoImage(done_resized)
 done_button = Button(window, image=done_image, bg="black", border=0, command=done_button_click)
 done = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=done_button)
 canvas_main.itemconfig(done, state="hidden")
 
 "Start button."
-start_org = Image.open("images/start.png")
-start_resized = start_org.resize((200, 75))
 start_image = ImageTk.PhotoImage(start_resized)
 start_button = Button(window, image=start_image, bg="black", border=0, command=main_game)
 start = canvas_main.create_window(window_width / 2, window_height / 2 - 200, window=start_button)
 canvas_main.itemconfig(start, state="hidden")
 
 "Resume button."
-resume_org = Image.open("images/resume.png")
-resume_resized = resume_org.resize((244, 80))
 resume_image = ImageTk.PhotoImage(resume_resized)
 resume_button = Button(window, image=resume_image, border=0, bg="black", command=resume_button_click)
 resume = canvas_main.create_window(window_width / 2, window_height / 2 - 300, window=resume_button)
@@ -1439,8 +1365,6 @@ canvas_main.itemconfig(resume, state="hidden")
 resume_coords = canvas_main.coords(resume)
 
 "Restart button."
-restart_org = Image.open("images/restart.png")
-restart_resized = restart_org.resize((244, 80))
 restart_image = ImageTk.PhotoImage(restart_resized)
 restart_button = Button(window, image=restart_image, border=0, bg="black", command=restart_game)
 restarted = canvas_main.create_window(window_width / 2, window_height / 2 - 200, window=restart_button)
@@ -1448,8 +1372,6 @@ canvas_main.itemconfig(restarted, state="hidden")
 restart_coords = canvas_main.coords(restarted)
 
 "Save button."
-save_org = Image.open("images/save.png")
-save_resized = save_org.resize((204, 80))
 save_image = ImageTk.PhotoImage(save_resized)
 save_button = Button(window, image=save_image, border=0, bg="black", command=save_game)
 save = canvas_main.create_window(window_width / 2, window_height / 2 - 50, window=save_button)
@@ -1457,8 +1379,6 @@ canvas_main.itemconfig(save, state="hidden")
 save_coords = canvas_main.coords(save)
 
 "Load button."
-load_org = Image.open("images/load.png")
-load_resized = load_org.resize((204, 80))
 load_image = ImageTk.PhotoImage(load_resized)
 load_button = Button(window, image=load_image, border=0, bg="black", command=load_game)
 load = canvas_main.create_window(window_width / 2, window_height / 2 - 100, window=load_button)
@@ -1466,8 +1386,6 @@ canvas_main.itemconfig(load, state="hidden")
 load_coords = canvas_main.coords(load)
 
 "Leaderboard button."
-leaderboard_org = Image.open("images/leaderboard.png")
-leaderboard_resized = leaderboard_org.resize((474, 80))
 leaderboard_image = ImageTk.PhotoImage(leaderboard_resized)
 leaderboard_button = Button(window, image=leaderboard_image, border=0, bg="black", command=leaderboard)
 leaderboards = canvas_main.create_window(window_width / 2, window_height / 2, window=leaderboard_button)
@@ -1475,8 +1393,6 @@ canvas_main.itemconfig(leaderboards, state="hidden")
 leaderboard_coords = canvas_main.coords(leaderboards)
 
 "Options button."
-options_org = Image.open("images/options.png")
-options_resized = options_org.resize((240, 75))
 options_image = ImageTk.PhotoImage(options_resized)
 options_button = Button(window, image=options_image, bg="black", border=0, command=options_button_click)
 options = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=options_button)
@@ -1484,64 +1400,48 @@ canvas_main.itemconfig(options, state="hidden")
 options_coords = canvas_main.coords(options)
 
 "Cheat button."
-cheat_org = Image.open("images/cheat.png")
-cheat_resized = cheat_org.resize((204, 75))
 cheat_image = ImageTk.PhotoImage(cheat_resized)
 cheat_button = Button(window, image=cheat_image, border=0, bg="black", command=cheat_codes)
 cheats = canvas_main.create_window(window_width / 2, window_height / 2 - 100, window=cheat_button)
 canvas_main.itemconfig(cheats, state="hidden")
 
 "Key_binds button."
-key_binds_org = Image.open("images/key_binds.png")
-key_binds_resized = key_binds_org.resize((354, 80))
 key_binds_image = ImageTk.PhotoImage(key_binds_resized)
 key_binds_button = Button(window, image=key_binds_image, border=0, bg="black", command=key_binds_options)
 key_binds = canvas_main.create_window(window_width / 2, window_height / 2, window=key_binds_button)
 canvas_main.itemconfig(key_binds, state="hidden")
 
 "Arrows button."
-arrows_org = Image.open("images/arrows.png")
-arrows_resized = arrows_org.resize((334, 90))
 arrows_image = ImageTk.PhotoImage(arrows_resized)
 arrows_button = Button(window, image=arrows_image, border=0, bg="black", command=arrows_keybinds)
 arrows = canvas_main.create_window(window_width / 2 - 150, window_height / 2, window=arrows_button)
 canvas_main.itemconfig(arrows, state="hidden")
 
 "Wasd button."
-wasd_org = Image.open("images/wasd.png")
-wasd_resized = wasd_org.resize((254, 90))
 wasd_image = ImageTk.PhotoImage(wasd_resized)
 wasd_button = Button(window, image=wasd_image, border=0, bg="black", command=wasd_keybinds)
 wasd = canvas_main.create_window(window_width / 2 + 150, window_height / 2, window=wasd_button)
 canvas_main.itemconfig(wasd, state="hidden")
 
 "Help button."
-help_org = Image.open("images/help.png")
-help_resized = help_org.resize((174, 80))
 help_image = ImageTk.PhotoImage(help_resized)
 help_button = Button(window, image=help_image, border=0, bg="black", command=help_player)
 helps = canvas_main.create_window(window_width / 2, window_height / 2 + 100, window=help_button)
 canvas_main.itemconfig(helps, state="hidden")
 
 "Back button."
-back_org = Image.open("images/Back.png")
-back_resized = back_org.resize((204, 75))
 back_image = ImageTk.PhotoImage(back_resized)
 back_button = Button(window, image=back_image, border=0, bg="black", command=back_clear)
 backs = canvas_main.create_window(window_width / 2, window_height - window_height / 7, window=back_button)
 canvas_main.itemconfig(backs, state="hidden")
 
 "Back button to options."
-back1_org = Image.open("images/back.png")
-back1_resized = back1_org.resize((204, 75))
 back1_image = ImageTk.PhotoImage(back1_resized)
 back1_button = Button(window, image=back1_image, border=0, bg="black", command=back_clear_to_options)
 back1s = canvas_main.create_window(window_width / 2, window_height - window_height / 7, window=back1_button)
 canvas_main.itemconfig(back1s, state="hidden")
 
 "Exit button."
-exit_org = Image.open("images/exit.png")
-exit_resized = exit_org.resize((200, 70))
 exit_image = ImageTk.PhotoImage(exit_resized)
 exit_button = Button(window, image=exit_image, bg="black", border=0, command=window.destroy)
 exited = canvas_main.create_window(window_width / 2, window_height / 2 + 200, window=exit_button)
@@ -1554,8 +1454,6 @@ boss_key = canvas_main.create_image(window_width / 2, window_height / 2, image=b
 canvas_main.itemconfig(boss_key, state="hidden")
 
 "Spaceship."
-spaceship_org = Image.open("images/spaceship_image.png")
-spaceship_resized = spaceship_org.resize((100, 100))
 spaceship_image = ImageTk.PhotoImage(spaceship_resized)
 spaceship = canvas_main.create_image(window_width / 2 - 40,
                                      window_height - window_height / 6,
