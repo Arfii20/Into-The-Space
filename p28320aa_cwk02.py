@@ -94,15 +94,15 @@ def bind_keys():
     """
     global arrow_flag
     if arrow_flag:
-        canvas_main.bind("<Left>", move_spaceship_left)
-        canvas_main.bind("<Right>", move_spaceship_right)
-        canvas_main.bind("<Up>", move_spaceship_up)
-        canvas_main.bind("<Down>", move_spaceship_down)
+        canvas_main.bind("<Left>", lambda _: canvas_main.move(spaceship, -15, 0))
+        canvas_main.bind("<Right>", lambda _: canvas_main.move(spaceship, 15, 0))
+        canvas_main.bind("<Up>", lambda _: canvas_main.move(spaceship, 0, -15))
+        canvas_main.bind("<Down>", lambda _: canvas_main.move(spaceship, 0, 15))
     else:
-        canvas_main.bind("<a>", move_spaceship_left)
-        canvas_main.bind("<d>", move_spaceship_right)
-        canvas_main.bind("<w>", move_spaceship_up)
-        canvas_main.bind("<s>", move_spaceship_down)
+        canvas_main.bind("<a>", lambda _: canvas_main.move(spaceship, -15, 0))
+        canvas_main.bind("<d>", lambda _: canvas_main.move(spaceship, 15, 0))
+        canvas_main.bind("<w>", lambda _: canvas_main.move(spaceship, 0, -15))
+        canvas_main.bind("<s>", lambda _: canvas_main.move(spaceship, 0, 15))
     canvas_main.bind("<Shift-Z>", cheatz_reduce_speed_default)
     canvas_main.bind("<Shift-X>", cheatx_reduce_speed_by_one)
     canvas_main.bind("<Shift-C>", cheatc_increase_score)
@@ -128,39 +128,6 @@ def unbind_keys():
     canvas_main.unbind("<Shift-V>")
 
 
-def move_spaceship_left(_):
-    """
-    Moves spaceship left 15 pixels everytime it is called.
-    Takes an event as an argument and that is why used "_".
-    """
-
-    canvas_main.move(spaceship, -15, 0)
-
-
-def move_spaceship_right(_):
-    """
-    Moves spaceship right 15 pixels everytime it is called.
-    Takes an event as an argument and that is why used "_".
-    """
-    canvas_main.move(spaceship, 15, 0)
-
-
-def move_spaceship_up(_):
-    """
-    Moves spaceship up 15 pixels everytime it is called.
-    Takes an event as an argument and that is why used "_".
-    """
-    canvas_main.move(spaceship, 0, -15)
-
-
-def move_spaceship_down(_):
-    """
-    Moves spaceship down 15 pixels everytime it is called.
-    Takes an event as an argument and that is why used "_".
-    """
-    canvas_main.move(spaceship, 0, 15)
-
-
 def spaceship_touches_sides():
     """
     This function unbinds movement of the spaceship if it touches the sides.
@@ -184,24 +151,24 @@ def spaceship_touches_sides():
     # Binds if it goes other direction.
     if spaceship_pos[0] < window_width - 100:
         if arrow_flag:
-            canvas_main.bind("<Right>", move_spaceship_right)
+            canvas_main.bind("<Right>", lambda _: canvas_main.move(spaceship, 15, 0))
         else:
-            canvas_main.bind("<d>", move_spaceship_right)
+            canvas_main.bind("<d>", lambda _: canvas_main.move(spaceship, 15, 0))
     if spaceship_pos[0] > 0:
         if arrow_flag:
-            canvas_main.bind("<Left>", move_spaceship_left)
+            canvas_main.bind("<Left>", lambda _: canvas_main.move(spaceship, -15, 0))
         else:
-            canvas_main.bind("<a>", move_spaceship_left)
+            canvas_main.bind("<a>", lambda _: canvas_main.move(spaceship, -15, 0))
     if spaceship_pos[1] < window_height - 100:
         if arrow_flag:
-            canvas_main.bind("<Down>", move_spaceship_down)
+            canvas_main.bind("<Down>", lambda _: canvas_main.move(spaceship, 0, 15))
         else:
-            canvas_main.bind("<s>", move_spaceship_down)
+            canvas_main.bind("<s>", lambda _: canvas_main.move(spaceship, 0, 15))
     if spaceship_pos[1] > 0:
         if arrow_flag:
-            canvas_main.bind("<Up>", move_spaceship_up)
+            canvas_main.bind("<Up>", lambda _: canvas_main.move(spaceship, 0, -15))
         else:
-            canvas_main.bind("<w>", move_spaceship_up)
+            canvas_main.bind("<w>", lambda _: canvas_main.move(spaceship, 0, -15))
 
 
 def boss_key1(_):
@@ -390,11 +357,6 @@ def use_default_name():
     main_menu()
 
 
-def entry_clear(_):
-    """Deletes the characters that are in the entry widget if called."""
-    enter_name_box.delete(0, "end")
-
-
 def change_name():
     """
     Makes an entry widget which takes the player name.
@@ -411,7 +373,7 @@ def change_name():
     enter_name_box.insert(0, "Enter Name")
 
     # Binds button-1 of mouse to it which calls a function and clears the default text
-    enter_name_box.bind("<Button-1>", entry_clear)
+    enter_name_box.bind("<Button-1>", lambda _: enter_name_box.delete(0, "end"))
     entry_box = canvas_main.create_window(window_width / 2, window_height / 2, window=enter_name_box)
     canvas_main.itemconfig(done, state="normal")
 
@@ -1147,9 +1109,9 @@ def main_game():
 
     # Hides the main menu buttons.
     canvas_main.itemconfig(main_image, state="hidden")
-    canvas_main.itemconfig(start, state="hidden")
     canvas_main.itemconfig(load, state="hidden")
     hidden_buttons()
+    canvas_main.delete(start)
 
     # Deletes the scoreText when restarting.
     if restart_flag:
@@ -1206,30 +1168,29 @@ window_height = 900
 configure_window()
 
 "Defining various variables needed all over the game."
-arrow_flag = True
-restart_flag = False
+low_speed_default_on = False
+low_speed_one_on = False
 invulnerable = False
+restart_flag = False
 pause_game = False
+arrow_flag = True
 game_over = False
 bonus_on = False
-low_speed_one_on = False
-low_speed_default_on = False
 boss_flag = False
-spaceship_pos = None
 options_text = None
+spaceship_pos = None
 canvas_options = None
 enter_name_box = None
 selected_keybind = None
-bonus_object = ""
-low_speed_one_object = ""
 low_speed_default_object = ""
-name = getlogin()
-asteroid = []
+low_speed_one_object = ""
+bonus_object = ""
 scoreText = ""
 entry_box = ""
+asteroid = []
+name = getlogin()
 level_number = 1
 score = 0
-count = 50
 if system() == "Windows":
     asteroid_speed = 4
 else:
