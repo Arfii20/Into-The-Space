@@ -1070,7 +1070,6 @@ def asteroids_and_collision():
                     if low_speed_default_on:
                         canvas_main.delete(low_speed_default_object)
                         low_speed_default_on = False
-
                     canvas_main.after(1500, game_over_menu)
                     break
 
@@ -1087,7 +1086,7 @@ def asteroids_and_collision():
 
         # As long as the game is not over, loops back after 0.001 seconds.
         if not game_over:
-            sleep(0.001)
+            sleep(0.01)
             window.update()
             continue
         break
