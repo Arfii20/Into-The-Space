@@ -5,7 +5,7 @@ Position of the buttons are fixed using the coords function.
 """
 
 
-from PIL import Image, ImageTk
+from PIL import Image
 
 
 "Use default button."
